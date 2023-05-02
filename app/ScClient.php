@@ -2,12 +2,23 @@
 
 namespace App;
 
+use App\Models\ScJwt;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\Http;
 
 class ScClient
 {
+    const AUTH_BASE_URL = 'https://webauth.southernco.com';
+    const SC_BASE_URL = 'https://customerservice2.southerncompany.com';
+    const API_BASE_URL = 'https://customerservice2api.southerncompany.com/api';
+
+    public function __construct(
+        protected Http $client = new Http(),
+        protected ?ScJwt $jwt,
+    ) {
+    }
+
     public function login(): void
     {
         $authUrl = 'https://webauth.southernco.com/';

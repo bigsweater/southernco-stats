@@ -15,5 +15,3 @@ use Illuminate\Support\Str;
 |
 */
 
-Route::get('/', function () {
-});
