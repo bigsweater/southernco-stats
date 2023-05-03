@@ -10,6 +10,8 @@ class ScCredentials extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     protected $casts = [
         'username' => 'encrypted',
         'password' => 'encrypted',

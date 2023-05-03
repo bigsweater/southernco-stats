@@ -2,7 +2,7 @@
 
 namespace App;
 
-use App\Models\ScJwt;
+use App\Models\ScCredentials;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\Http;
@@ -14,12 +14,12 @@ class ScClient
     const API_BASE_URL = 'https://customerservice2api.southerncompany.com/api';
 
     public function __construct(
+        public ScCredentials $credentials,
         protected Http $client = new Http(),
-        protected ?ScJwt $jwt,
     ) {
     }
 
-    public function login(): void
+    public function fetchJwt(): static
     {
         $authUrl = 'https://webauth.southernco.com/';
         $authPath = 'account/login';
@@ -63,14 +63,12 @@ class ScClient
             ->getCookieByName('SouthernJwtCookie')
             ->getValue();
 
-        $jwt = Http::withCookies([
+        $this->credentials->jwt =  Http::withCookies([
             'SouthernJwtCookie' => $jwtRetrievalToken,
         ], 'customerservice2.southerncompany.com')
             ->get($authGetParams['Origin'] . '/Account/LoginValidated/JwtToken')
             ->cookies()->getCookieByName('ScJwtToken')->getValue();
 
-        return Http::withToken($jwt)
-            ->get('https://customerservice2api.southerncompany.com/api/account/getAllAccounts')
-            ->json();
+        return $this;
     }
 }

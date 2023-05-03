@@ -6,6 +6,6 @@
             </h2>
         </div>
 
-        <livewire:sc-credentials-form :credentials="auth()->user()->scCredentials" />
+        <livewire:sc-credentials-form :credentials="auth()->user()->scCredentials()->firstOrNew()" />
     </x-filament::card>
 </x-filament::widget>

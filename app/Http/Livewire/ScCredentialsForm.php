@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 
 use App\Models\ScCredentials;
+use App\ScClient;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
@@ -14,14 +15,23 @@ class ScCredentialsForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    public ?ScCredentials $credentials;
+    public ScCredentials $credentials;
+
+    private ScClient $client;
 
     public function mount(): void
     {
+        $this->client = new ScClient($this->credentials);
+
         $this->form->fill([
             'username' => $this->credentials?->username,
             'password' => $this->credentials?->password,
         ]);
+    }
+
+    public function updateCredentials(): void
+    {
+        $this->credentials->update();
     }
 
     protected function getFormSchema(): array
@@ -32,7 +42,7 @@ class ScCredentialsForm extends Component implements HasForms
         ];
     }
 
-    protected function getFormModel(): ?Model
+    protected function getFormModel(): ?ScCredentials
     {
         return $this->credentials;
     }

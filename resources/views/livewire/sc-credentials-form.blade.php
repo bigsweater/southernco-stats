@@ -1,5 +1,5 @@
 <div>
-    <form wire:submit.prevent="updateCredentials">
+    <form wire:submit.prevent="updateCredentials" wire:loading.class="opacity-50">
         {{ $this->form }}
 
         <div class="mt-6">
