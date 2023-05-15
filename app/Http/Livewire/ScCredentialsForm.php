@@ -7,7 +7,6 @@ use App\ScClient;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\View\View;
 use Livewire\Component;
 
@@ -17,32 +16,35 @@ class ScCredentialsForm extends Component implements HasForms
 
     public ScCredentials $credentials;
 
-    private ScClient $client;
-
     public function mount(): void
     {
-        $this->client = new ScClient($this->credentials);
-
         $this->form->fill([
-            'username' => $this->credentials?->username,
-            'password' => $this->credentials?->password,
+            'username' => $this->credentials->username,
+            'password' => $this->credentials->password,
         ]);
     }
 
     public function updateCredentials(): void
     {
-        $this->credentials->update();
+        $state = $this->form->getState();
+        $this->credentials->username = $state['username'];
+        $this->credentials->password = $state['password'];
+        $client = new ScClient($this->credentials);
+        $this->credentials->jwt = $client->getJwt();
+        $this->credentials->user()->associate(auth()->user());
+
+        $this->credentials->save();
     }
 
     protected function getFormSchema(): array
     {
         return [
-            TextInput::make('username')->required(),
-            TextInput::make('password')->password()->required(),
+            TextInput::make('username')->required()->autocomplete('off'),
+            TextInput::make('password')->password()->required()->autocomplete('off'),
         ];
     }
 
-    protected function getFormModel(): ?ScCredentials
+    protected function getFormModel(): ScCredentials
     {
         return $this->credentials;
     }

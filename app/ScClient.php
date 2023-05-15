@@ -19,7 +19,7 @@ class ScClient
     ) {
     }
 
-    public function fetchJwt(): static
+    public function getJwt(): string
     {
         $authUrl = 'https://webauth.southernco.com/';
         $authPath = 'account/login';
@@ -48,8 +48,8 @@ class ScClient
         $response = Http::asJson()->withHeaders([
             'RequestVerificationToken' => $aft,
         ])->post($authUrl . 'api/login', [
-            'username' => '',
-            'password' => '',
+            'username' => $this->credentials->username,
+            'password' => $this->credentials->password,
             'params' => $params,
             'targetPage' => 1,
         ]);
@@ -63,12 +63,10 @@ class ScClient
             ->getCookieByName('SouthernJwtCookie')
             ->getValue();
 
-        $this->credentials->jwt =  Http::withCookies([
+        return Http::withCookies([
             'SouthernJwtCookie' => $jwtRetrievalToken,
         ], 'customerservice2.southerncompany.com')
             ->get($authGetParams['Origin'] . '/Account/LoginValidated/JwtToken')
             ->cookies()->getCookieByName('ScJwtToken')->getValue();
-
-        return $this;
     }
 }
