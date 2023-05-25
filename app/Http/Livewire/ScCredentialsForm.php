@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Events\ScJwtStored;
 use App\Models\ScCredentials;
 use App\ScClient;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -34,6 +35,7 @@ class ScCredentialsForm extends Component implements HasForms
         $this->credentials->user()->associate(auth()->user());
 
         $this->credentials->save();
+        $this->emit('scJwtStored');
     }
 
     protected function getFormSchema(): array

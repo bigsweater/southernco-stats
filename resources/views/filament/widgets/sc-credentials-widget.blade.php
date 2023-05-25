@@ -2,7 +2,7 @@
     <x-filament::card>
         <div class="h-12 flex items-center space-x-4 rtl:space-x-reverse">
             <h2 class="text-lg sm:text-xl font-bold tracking-tight">
-                Georgia Power Credentials
+                SouthernCo Credentials
             </h2>
         </div>
 

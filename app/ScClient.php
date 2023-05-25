@@ -7,18 +7,28 @@ use DOMDocument;
 use DOMException;
 use DOMXPath;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class ScClient
 {
     const AUTH_BASE_URL = 'https://webauth.southernco.com';
-    const SC_BASE_URL = 'https://customerservice2.southerncompany.com';
+    const SC_WEB_BASE_URL = 'https://customerservice2.southerncompany.com';
+    const SC_API_BASE_URL = 'https://customerservice2api.southerncompany.com';
 
     public function __construct(
         public ScCredentials $credentials,
         protected Http $client = new Http(),
     ) {
+    }
+
+    public function getAccounts(): array
+    {
+        return $this->client::withToken($this->credentials->jwt)
+            ->get(self::SC_API_BASE_URL . '/api/account/getAllAccounts')
+            ->throw()
+            ->json();
     }
 
     public function getJwt(): string
@@ -30,8 +40,8 @@ class ScClient
 
         $token = $this->client::withCookies([
             'SouthernJwtCookie' => $jwtRetrievalToken,
-        ], Str::after(static::SC_BASE_URL, 'https://'))
-            ->get(static::SC_BASE_URL . '/Account/LoginValidated/JwtToken')
+        ], Str::after(static::SC_WEB_BASE_URL, 'https://'))
+            ->get(static::SC_WEB_BASE_URL . '/Account/LoginValidated/JwtToken')
             ->throw()
             ->cookies()
             ->getCookieByName('ScJwtToken')
@@ -47,13 +57,13 @@ class ScClient
         $authGetParams = [
             'WL_Type' => 'E',
             'WL_AppId' => 'OCCEvo',
-            'Origin' => static::SC_BASE_URL,
+            'Origin' => static::SC_WEB_BASE_URL,
             'WL_ReturnMethod' => 'FV',
             'WL_Expire' => '1',
             'ForgotInfoLink' => 'undefined',
             'ForgotPasswordLink' => 'undefined',
-            'WL_ReturnUrl' => static::SC_BASE_URL . ':443/Account/LoginValidated?ReturnUrl=/Login',
-            'WL_RegisterUrl' => static::SC_BASE_URL . ':443/MyProfile/Register?mnuopco=SCS',
+            'WL_ReturnUrl' => static::SC_WEB_BASE_URL . ':443/Account/LoginValidated?ReturnUrl=/Login',
+            'WL_RegisterUrl' => static::SC_WEB_BASE_URL . ':443/MyProfile/Register?mnuopco=SCS',
         ];
 
         $loginForm = $this->client::get(static::AUTH_BASE_URL . '/account/login', $authGetParams)->throw()->body();
@@ -101,7 +111,7 @@ class ScClient
     private function getJwtRetrievalToken(string $tempToken): string
     {
         $token = $this->client::asForm()
-            ->post(static::SC_BASE_URL . '/Account/LoginComplete?ReturnUrl=null', ['ScWebToken' => (string) $tempToken])
+            ->post(static::SC_WEB_BASE_URL . '/Account/LoginComplete?ReturnUrl=null', ['ScWebToken' => (string) $tempToken])
             ->throw()
             ->cookies()
             ->getCookieByName('SouthernJwtCookie')
