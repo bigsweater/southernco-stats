@@ -39,15 +39,15 @@ class ScAccountsList extends Component implements HasTable
 
         $accounts = Arr::get($client->getAccounts(), 'Data');
 
-        $start = now();
-
         foreach ($accounts as $data) {
             $account = ScAccount::fromApiResponse($data);
             $account->user()->associate(auth()->user());
-            $account->save();
-        }
 
-        auth()->user()->scAccounts()->where('created_at', '<', $start)->delete();
+            ScAccount::updateOrCreate(
+                ['account_number' => $account->account_number, 'user_id' => $account->user_id],
+                $account->attributesToArray()
+            );
+        }
     }
 
     protected function getTableColumns(): array
