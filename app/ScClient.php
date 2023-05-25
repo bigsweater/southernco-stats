@@ -2,14 +2,17 @@
 
 namespace App;
 
+use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use DOMDocument;
 use DOMException;
 use DOMXPath;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class ScClient
 {
@@ -23,12 +26,49 @@ class ScClient
     ) {
     }
 
+    public function authenticatedClient(): PendingRequest
+    {
+        return $this->client::withToken($this->credentials->jwt);
+    }
+
     public function getAccounts(): array
     {
-        return $this->client::withToken($this->credentials->jwt)
+        return $this->authenticatedClient()
             ->get(self::SC_API_BASE_URL . '/api/account/getAllAccounts')
             ->throw()
             ->json();
+    }
+
+    public function getServicePointNumber(ScAccount $account): array
+    {
+        return $this->authenticatedClient()
+            ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/getMPUBasicAccountInformation/{$account->account_number}/GPC")
+            ->throw()
+            ->json('Data.meterAndServicePoints.0');
+    }
+
+    public function getMonthly(
+        ScAccount $account,
+        ?Carbon $startDate = null,
+        ?Carbon $endDate = null,
+    ): array {
+        $startDate = $startDate ?? now()->subYears(2);
+        $endDate = $endDate ?? now();
+
+        $data = $this->authenticatedClient()
+            ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/MPUData/{$account->account_number}/Monthly", [
+                'StartDate' => $startDate->format('m/d/Y'),
+                'EndDate' => $endDate->format('m/d/Y'),
+                'ServicePointNumber' => $account->service_point_number,
+                'intervalBehavior' => 'Automatic',
+                'OPCO' => $account->company->name,
+            ])
+            ->throw()
+            ->json('Data.Data');
+
+        throw_if(!$data, new RuntimeException('Monthly data is empty.'));
+
+        return json_decode($data, true);
     }
 
     public function getJwt(): string

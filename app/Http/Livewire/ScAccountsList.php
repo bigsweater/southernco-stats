@@ -42,11 +42,16 @@ class ScAccountsList extends Component implements HasTable
         foreach ($accounts as $data) {
             $account = ScAccount::fromApiResponse($data);
             $account->user()->associate(auth()->user());
+            extract($client->getServicePointNumber($account));
+            $account->meter_number = $meterNumber;
+            $account->service_point_number = $servicePointNumber;
 
             ScAccount::updateOrCreate(
                 ['account_number' => $account->account_number, 'user_id' => $account->user_id],
                 $account->attributesToArray()
             );
+
+            dd($client->getMonthly($account));
         }
     }
 
