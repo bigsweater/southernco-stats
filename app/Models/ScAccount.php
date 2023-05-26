@@ -6,6 +6,7 @@ use App\Enums\ScAccountCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ScAccount extends Model
 {
@@ -20,6 +21,11 @@ class ScAccount extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scMonthlyReports(): HasMany
+    {
+        return $this->hasMany(ScMonthlyReport::class);
     }
 
     public static function fromApiResponse(array $data): static
