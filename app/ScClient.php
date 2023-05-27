@@ -28,7 +28,12 @@ class ScClient
 
     public function authenticatedClient(): PendingRequest
     {
-        return $this->client::withToken($this->credentials->jwt);
+        if ($this->credentials->updated_at->diffInHours(now()) > 2) {
+            $this->credentials->jwt = $this->getJwt();
+            $this->credentials->save();
+        }
+
+        return $this->client::withToken($this->credentials->fresh()->jwt);
     }
 
     public function getAccounts(): array
@@ -36,7 +41,7 @@ class ScClient
         return $this->authenticatedClient()
             ->get(self::SC_API_BASE_URL . '/api/account/getAllAccounts')
             ->throw()
-            ->json();
+            ->json('Data');
     }
 
     public function getServicePointNumber(ScAccount $account): array
@@ -52,7 +57,7 @@ class ScClient
         ?Carbon $startDate = null,
         ?Carbon $endDate = null,
     ): array {
-        $startDate = $startDate ?? now()->subYears(2);
+        $startDate = $startDate ?? now()->subYears(1);
         $endDate = $endDate ?? now();
 
         $data = $this->authenticatedClient()
@@ -66,9 +71,7 @@ class ScClient
             ->throw()
             ->json('Data.Data');
 
-        throw_if(!$data, new RuntimeException('Monthly data is empty.'));
-
-        return json_decode($data, true);
+        return json_decode($data ?? '[]', true);
     }
 
     public function getJwt(): string

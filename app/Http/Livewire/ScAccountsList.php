@@ -10,7 +10,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
 use Livewire\Component;
 
 class ScAccountsList extends Component implements HasTable
@@ -37,7 +36,7 @@ class ScAccountsList extends Component implements HasTable
     {
         $client = new ScClient($this->credentials);
 
-        $accounts = Arr::get($client->getAccounts(), 'Data');
+        $accounts = $client->getAccounts();
 
         foreach ($accounts as $data) {
             $account = ScAccount::fromApiResponse($data);
@@ -50,8 +49,6 @@ class ScAccountsList extends Component implements HasTable
                 ['account_number' => $account->account_number, 'user_id' => $account->user_id],
                 $account->attributesToArray()
             );
-
-            dd($client->getMonthly($account));
         }
     }
 
