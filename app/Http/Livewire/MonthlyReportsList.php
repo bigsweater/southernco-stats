@@ -30,8 +30,6 @@ class MonthlyReportsList extends Component implements HasTable
         auth()->user()->scAccounts->each(function (ScAccount $account) use ($client) {
             $monthly = $client->getMonthly($account);
 
-            $converted = collect();
-
             $dates = Arr::get($monthly, 'xAxis.dates');
             $cost = Arr::get($monthly, 'series.cost.data');
             $usage = Arr::get($monthly, 'series.usage.data');
@@ -39,7 +37,7 @@ class MonthlyReportsList extends Component implements HasTable
             $lowTemp = Arr::get($monthly, 'series.lowTemp.data');
 
             foreach ($dates as $index => $date) {
-                $converted->push(ScMonthlyReport::updateOrCreate([
+                ScMonthlyReport::updateOrCreate([
                     'sc_account_id' => $account->getKey(),
                     'period_start_at' => new Carbon($date['startDate']),
                     'period_end_at' => new Carbon($date['endDate']),
@@ -48,7 +46,7 @@ class MonthlyReportsList extends Component implements HasTable
                     'usage_kwh' => $usage[$index]['y'] ?? null,
                     'temp_high_f' => $highTemp[$index]['y'] ?? null,
                     'temp_low_f' => $lowTemp[$index]['y'] ?? null,
-                ]));
+                ]);
             }
         });
     }
