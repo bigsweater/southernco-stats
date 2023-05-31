@@ -4,11 +4,11 @@
              Monthly usage reports
         </h2>
 
-        {{-- <div> --}}
-        {{--     <x-filament-support::button wire:click.prevent=""> --}}
-        {{--         Refresh --}}
-        {{--     </x-filament-support::button> --}}
-        {{-- </div> --}}
+        <div>
+            <x-filament-support::button wire:click.prevent="updateMonthlyReports">
+                Refresh
+            </x-filament-support::button>
+        </div>
     </div>
 
     {{ $this->table }}

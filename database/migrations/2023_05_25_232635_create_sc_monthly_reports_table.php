@@ -17,10 +17,10 @@ return new class extends Migration
             $table->foreignIdFor(ScAccount::class);
             $table->timestamp('period_start_at')->index();
             $table->timestamp('period_end_at')->index();
-            $table->float('cost_usd');
-            $table->float('usage_kwh');
-            $table->float('temp_high_f');
-            $table->float('temp_low_f');
+            $table->float('cost_usd')->nullable();
+            $table->float('usage_kwh')->nullable();
+            $table->float('temp_high_f')->nullable();
+            $table->float('temp_low_f')->nullable();
             $table->timestamps();
         });
     }

@@ -19,6 +19,8 @@ class ScMonthlyReport extends Model
         'temp_low_f' => 'float',
     ];
 
+    protected $guarded = [];
+
     public function scAccount(): BelongsTo
     {
         return $this->belongsTo(ScAccount::class);
