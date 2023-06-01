@@ -5,9 +5,11 @@ namespace App\Http\Livewire;
 use App\Models\ScAccount;
 use App\Models\ScMonthlyReport;
 use App\ScClient;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -65,6 +67,27 @@ class MonthlyReportsList extends Component implements HasTable
             ),
             TextColumn::make('temp_high_f')->label('High °F'),
             TextColumn::make('temp_low_f')->label('Low °F'),
+        ];
+    }
+
+    protected function getTableFilters(): array
+    {
+        return [
+            Filter::make('period')->form([
+                DatePicker::make('period_start'),
+                DatePicker::make('period_end'),
+            ])
+            ->query(function (Builder $query, array $data): Builder {
+                return $query->when(
+                    $data['period_start'],
+                    fn (Builder $query, $date): Builder => $query->whereDate('period_start_at', '>=', $date)
+                )
+                ->when(
+                    $data['period_end'],
+                    fn (Builder $query, $date): Builder => $query->whereDate('period_end_at', '<=', $date)
+                );
+
+            })
         ];
     }
 
