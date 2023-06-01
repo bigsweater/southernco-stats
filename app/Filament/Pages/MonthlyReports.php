@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\MonthlyReportsBackfillWidget;
 use App\Filament\Widgets\MonthlyReportsTableWidget;
 use Filament\Pages\Page;
 
@@ -15,6 +16,7 @@ class MonthlyReports extends Page
     {
         return [
             MonthlyReportsTableWidget::class,
+            MonthlyReportsBackfillWidget::class,
         ];
     }
 
