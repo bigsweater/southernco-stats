@@ -4,11 +4,24 @@
              Monthly usage reports
         </h2>
 
-        <div>
-            <x-filament-support::button wire:click.prevent="updateMonthlyReports">
-                Refresh
-            </x-filament-support::button>
-        </div>
+        <form
+            wire:submit.prevent="updateMonthlyReports"
+            @if($this->isUpdating())
+            wire:poll
+            disabled
+            @endif
+            class="disabled:pointer-events-none disabled:opacity-50"
+        >
+            <div class="flex items-baseline gap-4">
+                @if($this->isUpdating())
+                <p class="animate-pulse text-sm text-gray-300">Loading...</p>
+                @endif
+
+                <x-filament-support::button type="submit">
+                    Refresh
+                </x-filament-support::button>
+            </div>
+        </form>
     </div>
 
     {{ $this->table }}

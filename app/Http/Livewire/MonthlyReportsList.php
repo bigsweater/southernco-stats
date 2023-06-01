@@ -2,17 +2,17 @@
 
 namespace App\Http\Livewire;
 
+use App\Jobs\UpdateMonthlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScMonthlyReport;
-use App\ScClient;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
+use Illuminate\Bus\BatchRepository;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -20,37 +20,29 @@ class MonthlyReportsList extends Component implements HasTable
 {
     use InteractsWithTable;
 
+    public ?string $batchId = null;
+
     public function render()
     {
         return view('livewire.monthly-reports-list');
     }
 
+    public function isUpdating(): bool
+    {
+        return boolval($this->batchId)
+            && boolval(($batch = app(BatchRepository::class)->find($this->batchId)))
+            && ! $batch->finished();
+    }
+
     public function updateMonthlyReports()
     {
-        $client = new ScClient(auth()->user()->scCredentials);
+        $batch = Bus::batch([]);
 
-        auth()->user()->scAccounts->each(function (ScAccount $account) use ($client) {
-            $monthly = $client->getMonthly($account);
-
-            $dates = Arr::get($monthly, 'xAxis.dates');
-            $cost = Arr::get($monthly, 'series.cost.data');
-            $usage = Arr::get($monthly, 'series.usage.data');
-            $highTemp = Arr::get($monthly, 'series.highTemp.data');
-            $lowTemp = Arr::get($monthly, 'series.lowTemp.data');
-
-            foreach ($dates as $index => $date) {
-                ScMonthlyReport::updateOrCreate([
-                    'sc_account_id' => $account->getKey(),
-                    'period_start_at' => new Carbon($date['startDate']),
-                    'period_end_at' => new Carbon($date['endDate']),
-                ], [
-                    'cost_usd' => $cost[$index]['y'] ?? null,
-                    'usage_kwh' => $usage[$index]['y'] ?? null,
-                    'temp_high_f' => $highTemp[$index]['y'] ?? null,
-                    'temp_low_f' => $lowTemp[$index]['y'] ?? null,
-                ]);
-            }
+        auth()->user()->scAccounts->each(function (ScAccount $account) use ($batch) {
+            $batch->add([new UpdateMonthlyReportsJob($account)]);
         });
+
+        $this->batchId = $batch->dispatch()->id;
     }
 
     protected function getTableColumns(): array
