@@ -10,7 +10,7 @@
             wire:poll
             disabled
             @endif
-            class="disabled:pointer-events-none disabled:opacity-50"
+            class="disabled:pointer-events-none disabled:cursor-not-allowed"
         >
             <div class="flex items-baseline gap-4">
                 @if($this->isUpdating())
