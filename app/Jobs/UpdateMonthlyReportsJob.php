@@ -20,8 +20,8 @@ class UpdateMonthlyReportsJob implements ShouldQueue
 
     public function __construct(
         public ScAccount $account,
-        public ?string $startDate = null,
-        public ?string $endDate = null,
+        public ?Carbon $startDate = null,
+        public ?Carbon $endDate = null,
     ) {
     }
 
@@ -35,6 +35,10 @@ class UpdateMonthlyReportsJob implements ShouldQueue
         $usage = Arr::get($data, 'series.usage.data');
         $highTemp = Arr::get($data, 'series.highTemp.data');
         $lowTemp = Arr::get($data, 'series.lowTemp.data');
+
+        if (!$dates) {
+            throw new \RuntimeException('Missing dates from monthly response.');
+        }
 
         foreach ($dates as $index => $date) {
             ScMonthlyReport::updateOrCreate([
