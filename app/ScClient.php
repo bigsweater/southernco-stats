@@ -24,6 +24,7 @@ class ScClient
         public ScCredentials $credentials,
         protected Http $client = new Http(),
     ) {
+        $this->client = $client->timeout(45);
     }
 
     public function authenticatedClient(): PendingRequest
