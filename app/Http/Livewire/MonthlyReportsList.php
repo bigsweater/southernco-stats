@@ -10,7 +10,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
-use Illuminate\Bus\BatchRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +29,7 @@ class MonthlyReportsList extends Component implements HasTable
     public function isUpdating(): bool
     {
         return boolval($this->batchId)
-            && boolval(($batch = app(BatchRepository::class)->find($this->batchId)))
+            && boolval(($batch = Bus::findBatch($this->batchId)))
             && ! $batch->finished();
     }
 

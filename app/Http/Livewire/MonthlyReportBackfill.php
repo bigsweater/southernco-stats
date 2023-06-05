@@ -9,7 +9,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Bus\Batch;
-use Illuminate\Bus\BatchRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Component;
@@ -56,7 +55,7 @@ class MonthlyReportBackfill extends Component implements HasForms
     public function getBatchProperty(): ?Batch
     {
         return $this->batchId
-            ? app(BatchRepository::class)->find($this->batchId)
+            ? Bus::findBatch($this->batchId)
             : null;
     }
 
