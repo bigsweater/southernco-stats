@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Exceptions\DataMissingFromSuccessfulResponse;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use DOMDocument;
@@ -22,7 +23,8 @@ class ScClient
     public function __construct(
         public ScCredentials $credentials,
         protected Http $client = new Http(),
-    ) {}
+    ) {
+    }
 
     public function authenticatedClient(): PendingRequest
     {
@@ -58,7 +60,7 @@ class ScClient
         $startDate = $startDate ?? now()->subMonth();
         $endDate = $endDate ?? now();
 
-        $data = $this->authenticatedClient()
+        $response = $this->authenticatedClient()
             ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/MPUData/{$account->account_number}/Daily", [
                 'StartDate' => $startDate->format('m/d/Y'),
                 'EndDate' => $endDate->format('m/d/Y'),
@@ -66,10 +68,9 @@ class ScClient
                 'intervalBehavior' => 'Automatic',
                 'OPCO' => $account->company->name,
             ])
-        ->throw()
-        ->json('Data.Data');
+            ->throw();
 
-        return json_decode($data ?? '[]', true);
+        return $this->getDataFromResponse($response);
     }
 
     public function getMonthly(
@@ -80,7 +81,7 @@ class ScClient
         $startDate = $startDate ?? now()->subYears(1);
         $endDate = $endDate ?? now();
 
-        $data = $this->authenticatedClient()
+        $response = $this->authenticatedClient()
             ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/MPUData/{$account->account_number}/Monthly", [
                 'StartDate' => $startDate->format('m/d/Y'),
                 'EndDate' => $endDate->format('m/d/Y'),
@@ -88,10 +89,9 @@ class ScClient
                 'intervalBehavior' => 'Automatic',
                 'OPCO' => $account->company->name,
             ])
-            ->throw()
-            ->json('Data.Data');
+            ->throw();
 
-        return json_decode($data ?? '[]', true);
+        return $this->getDataFromResponse($response);
     }
 
     public function getJwt(): string
@@ -183,5 +183,15 @@ class ScClient
         throw_if(!$token, new DOMException('Missing SouthernJwtCookie value.'));
 
         return $token;
+    }
+
+    private function getDataFromResponse(Response $response): array
+    {
+        throw_if(
+            is_null($data = $response->json('Data.Data')),
+            new DataMissingFromSuccessfulResponse($response)
+        );
+
+        return json_decode($data, associative: true);
     }
 }

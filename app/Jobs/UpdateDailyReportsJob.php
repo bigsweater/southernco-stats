@@ -42,10 +42,6 @@ class UpdateDailyReportsJob implements ShouldQueue
         $overage = collect(Arr::get($data, 'series.overage.data', []));
         $averageDailyCost = collect(Arr::get($data, 'series.avgDailyCost.data', []));
 
-        if (is_null($dates)) {
-            throw new \RuntimeException('Missing dates from monthly response.');
-        }
-
         foreach ($dates as $index => $date) {
             ScDailyReport::updateOrCreate([
                 'sc_account_id' => $this->account->getKey(),

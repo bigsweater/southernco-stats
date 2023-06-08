@@ -36,10 +36,6 @@ class UpdateMonthlyReportsJob implements ShouldQueue
         $highTemp = Arr::get($data, 'series.highTemp.data');
         $lowTemp = Arr::get($data, 'series.lowTemp.data');
 
-        if (!$dates) {
-            throw new \RuntimeException('Missing dates from monthly response.');
-        }
-
         foreach ($dates as $index => $date) {
             ScMonthlyReport::updateOrCreate([
                 'sc_account_id' => $this->account->getKey(),
