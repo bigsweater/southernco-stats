@@ -28,8 +28,8 @@ class DailyReportsList extends Component implements HasTable
     public function isUpdating(): bool
     {
         return boolval($this->batchId)
-            && boolval(($batch = Bus::findBatch($this->batchId)))
-            && ! $batch->finished();
+            && boolval($batch = Bus::findBatch($this->batchId))
+            && !$batch->finished();
     }
 
     public function updateDailyReports()
@@ -60,6 +60,9 @@ class DailyReportsList extends Component implements HasTable
             TextColumn::make('weekend_usage_kwh')->label('Weekday Usage')->formatStateUsing(
                 fn (?string $state) => $state ? "{$state} kwh" : ''
             ),
+            TextColumn::make('overage')->label('Overage')->formatStateUsing(
+                fn (?string $state) => $state ? "{$state} kwh" : ''
+            ),
             TextColumn::make('temp_high_f')->label('High °F'),
             TextColumn::make('temp_low_f')->label('Low °F'),
         ];
@@ -70,7 +73,10 @@ class DailyReportsList extends Component implements HasTable
         return ScDailyReport::whereIn(
             'sc_account_id',
             auth()->user()->scAccounts()->select('id')
-        )->join(
+        )
+            ->select()
+            ->addSelect(DB::raw('(coalesce(overage_high_kwh, 0) - coalesce(overage_low_kwh, 0)) as overage'))
+            ->join(
                 DB::raw('(SELECT id as account_id, account_number FROM sc_accounts) as acc'),
                 fn ($join) => $join->on('sc_daily_reports.sc_account_id', '=', 'acc.account_id')
             )

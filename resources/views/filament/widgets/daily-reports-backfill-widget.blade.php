@@ -1,5 +1,5 @@
 <x-filament::widget>
     <x-filament::card>
-        {{-- Widget content --}}
+        <livewire:daily-report-backfill />
     </x-filament::card>
 </x-filament::widget>
