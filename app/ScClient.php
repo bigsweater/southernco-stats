@@ -12,7 +12,6 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 class ScClient
 {
@@ -23,9 +22,7 @@ class ScClient
     public function __construct(
         public ScCredentials $credentials,
         protected Http $client = new Http(),
-    ) {
-        $this->client = $client->timeout(45);
-    }
+    ) {}
 
     public function authenticatedClient(): PendingRequest
     {
@@ -51,6 +48,28 @@ class ScClient
             ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/getMPUBasicAccountInformation/{$account->account_number}/GPC")
             ->throw()
             ->json('Data.meterAndServicePoints.0');
+    }
+
+    public function getDaily(
+        ScAccount $account,
+        ?Carbon $startDate = null,
+        ?Carbon $endDate = null,
+    ): array {
+        $startDate = $startDate ?? now()->subMonth();
+        $endDate = $endDate ?? now();
+
+        $data = $this->authenticatedClient()
+            ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/MPUData/{$account->account_number}/Daily", [
+                'StartDate' => $startDate->format('m/d/Y'),
+                'EndDate' => $endDate->format('m/d/Y'),
+                'ServicePointNumber' => $account->service_point_number,
+                'intervalBehavior' => 'Automatic',
+                'OPCO' => $account->company->name,
+            ])
+        ->throw()
+        ->json('Data.Data');
+
+        return json_decode($data ?? '[]', true);
     }
 
     public function getMonthly(

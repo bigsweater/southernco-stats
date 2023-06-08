@@ -15,19 +15,17 @@ return new class extends Migration
         Schema::create('sc_daily_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(ScAccount::class);
-            $table->timestamp('period_start_at')->index();
-            $table->timestamp('period_end_at')->index();
-            $table->timestamp('day')->index();
-            $table->float('alert_kwh')->nullable();
-            $table->float('average_daily_cost_usd')->nullable();
-            $table->float('overage_low_kwh')->nullable();
-            $table->float('overage_high_kwh')->nullable();
+            $table->timestamp('day_at')->index();
             $table->float('weekday_cost_usd')->nullable();
             $table->float('weekday_usage_kwh')->nullable();
             $table->float('weekend_cost_usd')->nullable();
             $table->float('weekend_usage_kwh')->nullable();
             $table->float('temp_high_f')->nullable();
             $table->float('temp_low_f')->nullable();
+            $table->float('alert_cost')->nullable();
+            $table->float('overage_low_kwh')->nullable();
+            $table->float('overage_high_kwh')->nullable();
+            $table->float('average_daily_cost_usd')->nullable();
             $table->timestamps();
         });
     }

@@ -13,9 +13,7 @@ class ScDailyReport extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'period_start_at' => 'immutable_datetime',
-        'period_end_at' => 'immutable_datetime',
-        'day' => 'immutable_datetime',
+        'day_at' => 'immutable_datetime',
         'alert_kwh' => 'float',
         'average_daily_cost_usd' => 'float',
         'overage_low_kwh' => 'float',
