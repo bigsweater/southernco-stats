@@ -62,7 +62,6 @@ class DailyReportsList extends Component implements HasTable
             ),
             TextColumn::make('temp_high_f')->label('High °F'),
             TextColumn::make('temp_low_f')->label('Low °F'),
-            TextColumn::make('number_days')->label('Low °F'),
         ];
     }
 
