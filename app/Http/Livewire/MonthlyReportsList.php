@@ -29,7 +29,7 @@ class MonthlyReportsList extends Component implements HasTable
     public function isUpdating(): bool
     {
         return boolval($this->batchId)
-            && boolval(($batch = Bus::findBatch($this->batchId)))
+            && boolval($batch = Bus::findBatch($this->batchId))
             && ! $batch->finished();
     }
 

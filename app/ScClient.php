@@ -52,6 +52,27 @@ class ScClient
             ->json('Data.meterAndServicePoints.0');
     }
 
+    public function getHourly(
+        ScAccount $account,
+        ?Carbon $startDate = null,
+        ?Carbon $endDate = null,
+    ): array {
+        $startDate = $startDate ?? now()->subMonth();
+        $endDate = $endDate ?? now();
+
+        $response = $this->authenticatedClient()
+            ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/MPUData/{$account->account_number}/Hourly", [
+                'StartDate' => $startDate->format('m/d/Y'),
+                'EndDate' => $endDate->format('m/d/Y'),
+                'ServicePointNumber' => $account->service_point_number,
+                'intervalBehavior' => 'Automatic',
+                'OPCO' => $account->company->name,
+            ])
+            ->throw();
+
+        return $this->getDataFromResponse($response);
+    }
+
     public function getDaily(
         ScAccount $account,
         ?Carbon $startDate = null,

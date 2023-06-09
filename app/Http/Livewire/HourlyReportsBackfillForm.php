@@ -2,7 +2,7 @@
 
 namespace App\Http\Livewire;
 
-use App\Jobs\UpdateDailyReportsJob;
+use App\Jobs\UpdateHourlyReportsJob;
 use App\Models\ScAccount;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -14,18 +14,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Component;
 
-class DailyReportBackfill extends Component implements HasForms
+class HourlyReportsBackfillForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
     public ?int $accountId = null;
     public string $from;
     public ?string $batchId = null;
-
-    public function render()
-    {
-        return view('livewire.daily-report-backfill');
-    }
 
     public function backfill(): void
     {
@@ -36,32 +31,14 @@ class DailyReportBackfill extends Component implements HasForms
         $account = ScAccount::findOrFail($this->accountId);
 
         $from = new Carbon($this->from);
-        $to = $from->copy()->addMonth();
+        $to = $from->copy()->addDay();
 
-        $this->batchJobsByMonth($account, $from, $to, $batch);
+        $this->batchJobsByDay($account, $from, $to, $batch);
 
         $this->batchId = $batch->allowFailures()->dispatch()->id;
     }
 
-    public function getBatchProperty(): ?Batch
-    {
-        return $this->batchId
-            ? Bus::findBatch($this->batchId)
-            : null;
-    }
-
-    public function getIsBackfillingProperty(): bool
-    {
-        return $this->batch
-            && !$this->batch?->finished();
-    }
-
-    public function getProgressProperty(): ?int
-    {
-        return $this->batch?->progress();
-    }
-
-    private function batchJobsByMonth(ScAccount $account, Carbon $from, Carbon $to, PendingBatch &$batch): void
+    private function batchJobsByDay(ScAccount $account, Carbon $from, Carbon $to, PendingBatch &$batch): void
     {
         $now = now();
 
@@ -77,19 +54,37 @@ class DailyReportBackfill extends Component implements HasForms
             return;
         }
 
-        $batch->add(new UpdateDailyReportsJob(
+        $batch->add(new UpdateHourlyReportsJob(
             account: $account,
             startDate: $from,
             endDate: $to
         ));
 
-
-        $this->batchJobsByMonth(
+        $this->batchJobsByDay(
             account: $account,
-            from: $from->copy()->addMonth(),
-            to: $to->copy()->addMonth(),
+            from: $from->copy()->addDay(),
+            to: $to->copy()->addDay(),
             batch: $batch,
         );
+    }
+
+    public function getBatchProperty(): ?Batch
+    {
+        return $this->batchId
+            ? Bus::findBatch($this->batchId)
+            : null;
+    }
+
+    public function getIsBackfillingProperty(): bool
+    {
+        return $this->batch
+            && !$this->batch->finished()
+            && !$this->batch->cancelled();
+    }
+
+    public function getProgressProperty(): ?int
+    {
+        return $this->batch?->progress();
     }
 
     protected function getFormSchema(): array
@@ -98,7 +93,12 @@ class DailyReportBackfill extends Component implements HasForms
             Select::make('accountId')
                 ->options(auth()->user()->scAccounts()->pluck('description', 'id'))
                 ->required(),
-            DatePicker::make('from')->before(date: '1 month ago')->label('How far back to retrieve data?')->required(),
+            DatePicker::make('from')->before(date: '2 days ago')->label('How far back to retrieve data?')->required(),
         ];
+    }
+
+    public function render()
+    {
+        return view('livewire.hourly-reports-backfill-form');
     }
 }
