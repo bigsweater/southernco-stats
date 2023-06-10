@@ -1,66 +1,35 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Does Georgia Power's "Smart Usage" plan change your bill?
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[Smart Usage](https://www.georgiapower.com/residential/billing-and-rate-plans/pricing-and-rate-plans/smart-usage.html) is a billing plan for residential GA Power customers.
 
-## About Laravel
+It's complicated. More complicated than charging a rate per KWh. Under a Smart Usage plan, you're *definitely* billed per KWh, but there are other parts of it. There are peak hours and off-peak hours, which are billed at different rates. There is a "demand" cost, which charges you a rate per KWh during your *highest hour of usage*.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+So if I sign up for Smart Usage, will my bill go up? Or will it go down? (Or...will it just stay the same?)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Georgia Power doesn't answer that question. And their limited data dashboard does not make answering the question for yourself any easier.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+So I built an app to help me.
 
-## Learning Laravel
+## What is this thing
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+For now it's just a UI that fetches historical power usage data from the Southern Company API. If it's useful to me, I'll add some reporting and email alerts. My main goal was just to get a database with my power usage though, so that's all it does!
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## WIP
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+This is **not** meant for production use or hosting on the Internet. It's a personal app I built to host privately, so I haven't taken too much care to make it secure or well-tested. (It's also super messy and inconsistent throughout!)
 
-## Laravel Sponsors
+Since I'm a Georgia Power customer, it *only* works with Georgia Power (as far as I know). It might work with other Southern Company accounts, though.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Since Southern Company's API is technically private, this could stop working at any point if they change endpoints or data structures or whatever.
 
-### Premium Partners
+## How to use it
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+It's a Laravel app, so it will work anywhere PHP works. The UI is built with [Filament](https://filamentphp.com). I built it with Postgres in mind, but it would probably work fine with other databases. It doesn't do anything special from a data perspective.
 
-## Contributing
+It uses a queue for most interactions with the Southern Co. API, so you'll also need to make sure a queue worker is running, but that's about it.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Once you've got it running, you'll just need to create an account, add your Southern Company credentials (which are encrypted), and start pulling data down.
 
-## Code of Conduct
+## Credits
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The Southern Company API client is based entirely on [@apearson's southern-company-api](https://github.com/apearson/southern-company-api) package, especially the auth flow. (I never would have figured it out without reading through package and its README.)
