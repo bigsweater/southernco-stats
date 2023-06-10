@@ -24,8 +24,8 @@ class UpdateHourlyReportsJob implements ShouldQueue
      */
     public function __construct(
         public ScAccount $account,
-        public Carbon $startDate,
-        public Carbon $endDate
+        public ?Carbon $startDate = null,
+        public ?Carbon $endDate = null
     ) {
     }
 
@@ -34,11 +34,17 @@ class UpdateHourlyReportsJob implements ShouldQueue
      */
     public function handle(): void
     {
+        if (!$this->startDate) {
+            $this->startDate = now()->subDays(3);
+            $this->endDate = now()->subDays(2);
+        }
+
         if ($this->startDate->greaterThanOrEqualTo(now()->subDays(2))) {
             logger('Cannot fetch hourly data after two days ago.', [
                 'startDate' => $this->startDate,
                 'endDate' => $this->endDate,
             ]);
+
             return;
         }
 

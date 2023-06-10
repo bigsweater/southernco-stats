@@ -25,7 +25,19 @@ class ScHourlyReport extends Model
     public function isPeak(): Attribute
     {
         return Attribute::make(
-            get: fn () => true
+            get: function () {
+                if (
+                    is_null($this->peak_hours_from)
+                    || is_null($this->peak_hours_to)
+                ) {
+                    return false;
+                }
+
+                return $this->hour_at->isBetween(
+                    $this->hour_at->setTime($this->peak_hours_from, 0),
+                    $this->hour_at->setTime($this->peak_hours_to, 0)
+                );
+            }
         );
     }
 
