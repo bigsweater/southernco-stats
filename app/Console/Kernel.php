@@ -2,6 +2,10 @@
 
 namespace App\Console;
 
+use App\Jobs\UpdateDailyReportsJob;
+use App\Jobs\UpdateHourlyReportsJob;
+use App\Jobs\UpdateMonthlyReportsJob;
+use App\Models\ScAccount;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -12,7 +16,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        ScAccount::lazy()->each(function (ScAccount $account) use ($schedule) {
+            $schedule->job(new UpdateHourlyReportsJob($account))->hourly();
+            $schedule->job(new UpdateDailyReportsJob($account))->daily();
+            $schedule->job(new UpdateMonthlyReportsJob($account))->daily();
+        });
     }
 
     /**
@@ -20,7 +28,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
