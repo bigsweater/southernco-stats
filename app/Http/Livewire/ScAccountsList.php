@@ -16,7 +16,7 @@ class ScAccountsList extends Component implements HasTable
 {
     use InteractsWithTable;
 
-    public ScCredentials $credentials;
+    public ?ScCredentials $credentials = null;
 
     protected $listeners = [
         'scJwtStored' => 'updateAccounts'
