@@ -16,20 +16,18 @@ class ScAccountsList extends Component implements HasTable
 {
     use InteractsWithTable;
 
-    public ?ScCredentials $credentials = null;
-
     protected $listeners = [
         'scJwtStored' => 'updateAccounts'
     ];
 
-    public function mount(): void
-    {
-        $this->credentials = auth()->user()->scCredentials;
-    }
-
     public function render()
     {
         return view('livewire.sc-accounts-list');
+    }
+
+    public function getCredentialsProperty(): ?ScCredentials
+    {
+        return auth()->user()->scCredentials;
     }
 
     public function updateAccounts(): void
