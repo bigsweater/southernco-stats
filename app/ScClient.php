@@ -8,11 +8,13 @@ use App\Models\ScCredentials;
 use DOMDocument;
 use DOMException;
 use DOMXPath;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 class ScClient
 {
@@ -20,9 +22,11 @@ class ScClient
     const SC_WEB_BASE_URL = 'https://customerservice2.southerncompany.com';
     const SC_API_BASE_URL = 'https://customerservice2api.southerncompany.com';
 
+    use ForwardsCalls;
+
     public function __construct(
         public ScCredentials $credentials,
-        protected Http $client = new Http(),
+        protected Http|Factory $client = new Http(),
     ) {
     }
 
@@ -219,5 +223,10 @@ class ScClient
         );
 
         return json_decode($data, associative: true);
+    }
+
+    public function __call(string $name, array $arguments): mixed
+    {
+        return $this->forwardCallTo($this->client, $name, $arguments);
     }
 }
