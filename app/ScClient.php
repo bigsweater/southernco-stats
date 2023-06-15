@@ -206,6 +206,11 @@ class ScClient
         return $token;
     }
 
+    public static function fake(ScCredentials $credentials): static
+    {
+        return new static($credentials, Http::fake());
+    }
+
     private function getDataFromResponse(Response $response): array
     {
         throw_if(
