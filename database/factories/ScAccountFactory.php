@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,15 +10,19 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ScAccountFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'account_number' => $this->faker->randomNumber(),
+            'service_point_number' => $this->faker->randomNumber(),
+            'meter_number' => $this->faker->randomNumber(),
+            'account_type' => 0,
+            'company' => 2,
+            'is_primary' => $this->faker->boolean(),
+            'description' => $this->faker->streetAddress(),
+            'updated_at' => now(),
+            'created_at' => now(),
         ];
     }
 }
