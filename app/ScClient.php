@@ -14,6 +14,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 use Illuminate\Support\Traits\ForwardsCalls;
 
 class ScClient
@@ -217,12 +218,11 @@ class ScClient
 
     private function getDataFromResponse(Response $response): array
     {
-        throw_if(
-            is_null($data = $response->json('Data.Data')),
-            new DataMissingFromSuccessfulResponse($response)
+        return json_decode(
+            Str::of($response->json('Data.Data', '{}'))
+                ->whenEmpty(fn () => '{}'),
+            associative: true
         );
-
-        return json_decode($data, associative: true);
     }
 
     public function __call(string $name, array $arguments): mixed
