@@ -27,14 +27,14 @@ class UpdateMonthlyReportsJob implements ShouldQueue
 
     public function handle(): void
     {
-        $client = new ScClient($this->account->user->scCredentials);
+        $client = app(ScClient::class, [$this->account->user->scCredentials]);
         $data = $client->getMonthly($this->account, $this->startDate, $this->endDate);
 
-        $dates = Arr::get($data, 'xAxis.dates');
-        $cost = Arr::get($data, 'series.cost.data');
-        $usage = Arr::get($data, 'series.usage.data');
-        $highTemp = Arr::get($data, 'series.highTemp.data');
-        $lowTemp = Arr::get($data, 'series.lowTemp.data');
+        $dates = Arr::get($data, 'xAxis.dates', []);
+        $cost = Arr::get($data, 'series.cost.data', []);
+        $usage = Arr::get($data, 'series.usage.data', []);
+        $highTemp = Arr::get($data, 'series.highTemp.data', []);
+        $lowTemp = Arr::get($data, 'series.lowTemp.data', []);
 
         foreach ($dates as $index => $date) {
             ScMonthlyReport::updateOrCreate([
