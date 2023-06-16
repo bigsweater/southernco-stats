@@ -18,11 +18,11 @@ use Illuminate\Support\Traits\ForwardsCalls;
 
 class ScClient
 {
+    use ForwardsCalls;
+
     const AUTH_BASE_URL = 'https://webauth.southernco.com';
     const SC_WEB_BASE_URL = 'https://customerservice2.southerncompany.com';
     const SC_API_BASE_URL = 'https://customerservice2api.southerncompany.com';
-
-    use ForwardsCalls;
 
     public function __construct(
         public ScCredentials $credentials,

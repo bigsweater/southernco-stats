@@ -2,7 +2,6 @@
 
 namespace App\Http\Livewire;
 
-use App\Events\ScJwtStored;
 use App\Models\ScCredentials;
 use App\ScClient;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -30,7 +29,9 @@ class ScCredentialsForm extends Component implements HasForms
         $state = $this->form->getState();
         $this->credentials->username = $state['username'];
         $this->credentials->password = $state['password'];
-        $client = new ScClient($this->credentials);
+
+        $client = app(ScClient::class, [$this->credentials]);
+
         $this->credentials->jwt = $client->getJwt();
         $this->credentials->user()->associate(auth()->user());
 
