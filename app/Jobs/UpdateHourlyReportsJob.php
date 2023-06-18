@@ -73,7 +73,7 @@ class UpdateHourlyReportsJob implements ShouldQueue
 
     private function getValueAtIndex(Collection $data, int $index, ?string $key = 'y'): mixed
     {
-        $item = $data->firstWhere('x', '=', $index);
+        $item = $data->firstWhere('x', $index);
 
         return $item[$key] ?? null;
     }
