@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class UpdateMonthlyReportsJob implements ShouldQueue
 {
@@ -30,11 +31,11 @@ class UpdateMonthlyReportsJob implements ShouldQueue
         $client = app(ScClient::class, [$this->account->user->scCredentials]);
         $data = $client->getMonthly($this->account, $this->startDate, $this->endDate);
 
-        $dates = Arr::get($data, 'xAxis.dates', []);
-        $cost = Arr::get($data, 'series.cost.data', []);
-        $usage = Arr::get($data, 'series.usage.data', []);
-        $highTemp = Arr::get($data, 'series.highTemp.data', []);
-        $lowTemp = Arr::get($data, 'series.lowTemp.data', []);
+        $dates = collect(Arr::get($data, 'xAxis.dates', []));
+        $cost = collect(Arr::get($data, 'series.cost.data', []));
+        $usage = collect(Arr::get($data, 'series.usage.data', []));
+        $highTemp = collect(Arr::get($data, 'series.highTemp.data', []));
+        $lowTemp = collect(Arr::get($data, 'series.lowTemp.data', []));
 
         foreach ($dates as $index => $date) {
             ScMonthlyReport::updateOrCreate([
@@ -42,11 +43,18 @@ class UpdateMonthlyReportsJob implements ShouldQueue
                 'period_start_at' => new Carbon($date['startDate']),
                 'period_end_at' => new Carbon($date['endDate']),
             ], [
-                'cost_usd' => $cost[$index]['y'] ?? null,
-                'usage_kwh' => $usage[$index]['y'] ?? null,
-                'temp_high_f' => $highTemp[$index]['y'] ?? null,
-                'temp_low_f' => $lowTemp[$index]['y'] ?? null,
+                'cost_usd' => $this->getValueAtIndex($cost, $index),
+                'usage_kwh' => $this->getValueAtIndex($usage, $index),
+                'temp_high_f' => $this->getValueAtIndex($highTemp, $index),
+                'temp_low_f' => $this->getValueAtIndex($lowTemp, $index),
             ]);
         }
+    }
+
+    private function getValueAtIndex(Collection $data, int $index, ?string $key = 'y'): mixed
+    {
+        $item = $data->firstWhere('x', $index);
+
+        return $item[$key] ?? null;
     }
 }
