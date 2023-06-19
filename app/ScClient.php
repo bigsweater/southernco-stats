@@ -219,8 +219,12 @@ class ScClient
     private function getDataFromResponse(Response $response): array
     {
         return json_decode(
-            Str::of($response->json('Data.Data', '{}'))
-                ->whenEmpty(fn () => '{}'),
+            Str::of($response->json('Data.Data'))
+                ->whenEmpty(function () use ($response) {
+                    logger('Request was successful, but Data object was empty.', [$response]);
+
+                    return '[]';
+                }),
             associative: true
         );
     }
