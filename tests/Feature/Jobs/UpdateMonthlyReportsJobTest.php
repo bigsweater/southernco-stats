@@ -11,10 +11,10 @@ use function Pest\Laravel\freezeSecond;
 beforeEach(function () {
     $credentials = ScCredentials::factory()->create();
     $this->account = ScAccount::factory()->for($credentials->user)->create();
-});
-test('it stores monthly reports', function (array $response) {
     freezeSecond();
+});
 
+test('it stores monthly reports', function (array $response) {
     Http::fake([
         '*' => Http::response($response)
     ]);
@@ -32,8 +32,6 @@ test('it stores monthly reports', function (array $response) {
 })->with('response');
 
 test('it stores values in correct position', function (array $response) {
-    freezeSecond();
-
     Http::fake([
         '*' => Http::response($response)
     ]);
@@ -60,8 +58,6 @@ test('it stores values in correct position', function (array $response) {
 })->with('response');
 
 test('it does not crash if data is empty', function () {
-    freezeSecond();
-
     Http::fake([
         '*' => Http::response(['Data' => [
             'Data' => ''
