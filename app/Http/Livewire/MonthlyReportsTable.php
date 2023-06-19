@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-class MonthlyReportsList extends Component implements HasTable
+class MonthlyReportsTable extends Component implements HasTable
 {
     use InteractsWithTable;
 
@@ -23,7 +23,7 @@ class MonthlyReportsList extends Component implements HasTable
 
     public function render()
     {
-        return view('livewire.monthly-reports-list');
+        return view('livewire.monthly-reports-table');
     }
 
     public function isUpdating(): bool

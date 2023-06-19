@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\MonthlyReportsList;
+use App\Http\Livewire\MonthlyReportsTable;
 use App\Jobs\UpdateMonthlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
@@ -15,7 +15,7 @@ test('it lists monthly reports', function () {
     $reports = ScMonthlyReport::factory(10)->for(ScAccount::factory())->create();
     actingAs($reports->first()->scAccount->user);
 
-    livewire(MonthlyReportsList::class)
+    livewire(MonthlyReportsTable::class)
         ->assertCanSeeTableRecords($reports);
 });
 
@@ -24,7 +24,7 @@ test('it does not list others\' monthly reports', function () {
     $somebodyElsesReports = ScMonthlyReport::factory(10)->for(ScAccount::factory())->create();
     actingAs($reports->first()->scAccount->user);
 
-    livewire(MonthlyReportsList::class)
+    livewire(MonthlyReportsTable::class)
         ->assertCanSeeTableRecords($reports)
         ->assertCanNotSeeTableRecords($somebodyElsesReports);
 });
@@ -36,7 +36,7 @@ test('it dispatches a monthly reports update job', function () {
 
     actingAs($account->user);
 
-    livewire(MonthlyReportsList::class)->call('updateMonthlyReports');
+    livewire(MonthlyReportsTable::class)->call('updateMonthlyReports');
 
     Bus::assertBatched(function (PendingBatch $batch) use ($account) {
         $job = $batch->jobs->first();

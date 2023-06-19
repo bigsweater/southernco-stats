@@ -16,7 +16,7 @@ test('authenticated users can access monthly reports page', function () {
         ->assertOk();
 });
 
-test('the monthly reports list is present', function () {
+test('the monthly reports table is present', function () {
     actingAs(User::factory()->create())
         ->get('/monthly-reports')
         ->assertSeeLivewire(MonthlyReportsTableWidget::class);
