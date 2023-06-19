@@ -31,7 +31,7 @@ class UpdateDailyReportsJob implements ShouldQueue
         $client = new ScClient($this->account->user->scCredentials);
         $data = $client->getDaily($this->account, $this->startDate, $this->endDate);
 
-        $dates = Arr::get($data, 'xAxis.labels');
+        $dates = Arr::get($data, 'xAxis.labels', []);
         $weekdayCost = collect(Arr::get($data, 'series.weekdayCost.data', []));
         $weekdayUsage = collect(Arr::get($data, 'series.weekdayUsage.data', []));
         $weekendCost = collect(Arr::get($data, 'series.weekendCost.data', []));
