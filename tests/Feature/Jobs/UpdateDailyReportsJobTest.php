@@ -50,29 +50,12 @@ test('it stores values in correct position', function (array $response) {
     expect($secondReport->overage_high_kwh)->toBe(22.0);
     expect($secondReport->day_at->equalTo(now()))->toBeTrue();
 })->with([
-    fn () => generateResponseForTime(now()->toImmutable())
-]);
-
-test('it does not crash if data is empty', function () {
-    Http::fake([
-        '*' => Http::response(['Data' => [
-            'Data' => ''
-        ]])
-    ]);
-
-    expect((new UpdateDailyReportsJob($this->account))->handle())
-        ->not->toThrow(\Throwable::class);
-    expect(ScDailyReport::all())->toBeEmpty();
-});
-
-function generateResponseForTime(CarbonImmutable $baseTime): array
-{
-    return ['Data' => [
+    fn () => ['Data' => [
         'Data' => json_encode([
             'xAxis' => [
                 'labels' => [
-                    $baseTime->subDay()->toString(),
-                    $baseTime->toString(),
+                    now()->subDay()->toString(),
+                    now()->toString(),
                 ]
             ],
             'series' => [
@@ -90,5 +73,17 @@ function generateResponseForTime(CarbonImmutable $baseTime): array
                 'avgDailyCost' => ['data'  => [['x' => 1, 'y' => '123.01'], ['x' => 1, 'y' => '123.01']]],
             ]
         ])
-    ]];
-}
+    ]]
+]);
+
+test('it does not crash if data is empty', function () {
+    Http::fake([
+        '*' => Http::response(['Data' => [
+            'Data' => ''
+        ]])
+    ]);
+
+    expect((new UpdateDailyReportsJob($this->account))->handle())
+        ->not->toThrow(\Throwable::class);
+    expect(ScDailyReport::all())->toBeEmpty();
+});

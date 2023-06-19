@@ -4,7 +4,6 @@ use App\Jobs\UpdateHourlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use App\Models\ScHourlyReport;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\freezeSecond;
@@ -45,7 +44,22 @@ test('it stores values in correct position', function (array $response) {
     expect($thirdReport->usage_kwh)->toBe(13.0);
     expect($thirdReport->temp_f)->toBe(98.6);
 })->with([
-    fn () => generateResponseForTime(now()->toImmutable())
+    fn () => ['Data' => [
+        'Data' => json_encode([
+            'xAxis' => [
+                'labels' => [
+                    now()->subHours(2)->toString(),
+                    now()->subHour()->toString(),
+                    now()->toString(),
+                ]
+            ],
+            'series' => [
+                'cost' => ['data'  => [['x' => 1, 'y' => '123.01'], ['x' => 2, 'y' => '11']]],
+                'usage' => ['data'  => [['x' => 1, 'y' => '22.2'], ['x' => 2, 'y' => '13']]],
+                'temp' => ['data'  => [['x' => 0, 'y' => '18'], ['x' => 1, 'y' => '55'], ['x' => 2, 'y' => '98.6']]],
+            ]
+        ])
+    ]]
 ]);
 
 test('it does not crash if data is empty', function () {
@@ -59,23 +73,3 @@ test('it does not crash if data is empty', function () {
         ->not->toThrow(\Throwable::class);
     expect(ScHourlyReport::all())->toBeEmpty();
 });
-
-function generateResponseForTime(CarbonImmutable $baseTime): array
-{
-    return ['Data' => [
-        'Data' => json_encode([
-            'xAxis' => [
-                'labels' => [
-                    $baseTime->subHours(2)->toString(),
-                    $baseTime->subHour()->toString(),
-                    $baseTime->toString(),
-                ]
-            ],
-            'series' => [
-                'cost' => ['data'  => [['x' => 1, 'y' => '123.01'], ['x' => 2, 'y' => '11']]],
-                'usage' => ['data'  => [['x' => 1, 'y' => '22.2'], ['x' => 2, 'y' => '13']]],
-                'temp' => ['data'  => [['x' => 0, 'y' => '18'], ['x' => 1, 'y' => '55'], ['x' => 2, 'y' => '98.6']]],
-            ]
-        ])
-    ]];
-}
