@@ -51,7 +51,7 @@ class UpdateHourlyReportsJob implements ShouldQueue
         $client = new ScClient($this->account->user->scCredentials);
         $data = $client->getHourly($this->account, $this->startDate, $this->endDate);
 
-        $dates = Arr::get($data, 'xAxis.labels');
+        $dates = Arr::get($data, 'xAxis.labels', []);
         $peakBoundaries = collect(Arr::get($data, 'timeOfUse'))->firstWhere('type', 0);
         $cost = collect(Arr::get($data, 'series.cost.data', []));
         $usage = collect(Arr::get($data, 'series.usage.data', []));
