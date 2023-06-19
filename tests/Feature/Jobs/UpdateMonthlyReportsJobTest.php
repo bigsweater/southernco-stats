@@ -4,14 +4,16 @@ use App\Jobs\UpdateMonthlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use App\Models\ScMonthlyReport;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\freezeSecond;
 
 beforeEach(function () {
+    freezeSecond();
+
     $credentials = ScCredentials::factory()->create();
     $this->account = ScAccount::factory()->for($credentials->user)->create();
-    freezeSecond();
 });
 
 test('it stores monthly reports', function (array $response) {
@@ -29,7 +31,9 @@ test('it stores monthly reports', function (array $response) {
     expect($report->temp_low_f)->toBeNull();
     expect($report->period_start_at->equalTo(now()->subMonths(2)))->toBeTrue();
     expect($report->period_end_at->equalTo(now()->subMonth()->subDay()))->toBeTrue();
-})->with('response');
+})->with([
+    fn() => generateResponseWithTime(now())
+]);
 
 test('it stores values in correct position', function (array $response) {
     Http::fake([
@@ -55,7 +59,9 @@ test('it stores values in correct position', function (array $response) {
     expect($thirdReport->temp_low_f)->toBe(22.0);
     expect($thirdReport->period_start_at->equalTo(now()))->toBeTrue();
     expect($thirdReport->period_end_at->equalTo(now()->addMonth()))->toBeTrue();
-})->with('response');
+})->with([
+    fn () => generateResponseWithTime(now())
+]);
 
 test('it does not crash if data is empty', function () {
     Http::fake([
@@ -69,22 +75,22 @@ test('it does not crash if data is empty', function () {
     expect(ScMonthlyReport::all())->toBeEmpty();
 });
 
-dataset('response', [
-    'response with unordered series' => [ ['Data' => [
+function generateResponseWithTime(Carbon $baseTime) {
+    return ['Data' => [
         'Data' => json_encode([
             'xAxis' => [
                 'dates' => [
                     [
-                        'startDate' => now()->subMonths(2)->toString(),
-                        'endDate' => now()->subMonth()->subDay()->toString(),
+                        'startDate' => $baseTime->clone()->subMonths(2)->toString(),
+                        'endDate' => $baseTime->clone()->subMonth()->subDay()->toString(),
                     ],
                     [
-                        'startDate' => now()->subMonth()->toString(),
-                        'endDate' => now()->subDay()->toString(),
+                        'startDate' => $baseTime->clone()->subMonth()->toString(),
+                        'endDate' => $baseTime->clone()->subDay()->toString(),
                     ],
                     [
-                        'startDate' => now()->toString(),
-                        'endDate' => now()->addMonth()->toString(),
+                        'startDate' => $baseTime->clone()->toString(),
+                        'endDate' => $baseTime->clone()->addMonth()->toString(),
                     ]
                 ]
             ],
@@ -95,6 +101,6 @@ dataset('response', [
                 'lowTemp' => ['data'  => [['x' => 2, 'y' => '22.0']]],
             ]
         ])
-    ] ] ]
-]);
+    ]];
+}
 
