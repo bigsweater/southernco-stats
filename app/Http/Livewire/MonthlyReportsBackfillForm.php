@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Component;
 
-class MonthlyReportBackfill extends Component implements HasForms
+class MonthlyReportsBackfillForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
@@ -21,9 +21,14 @@ class MonthlyReportBackfill extends Component implements HasForms
     public string $from;
     public ?string $batchId = null;
 
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
     public function render()
     {
-        return view('livewire.monthly-report-backfill');
+        return view('livewire.monthly-reports-backfill-form');
     }
 
     public function backfill(): void
@@ -80,8 +85,13 @@ class MonthlyReportBackfill extends Component implements HasForms
         return [
             Select::make('accountId')
                 ->options(auth()->user()->scAccounts()->pluck('description', 'id'))
+                ->default(auth()->user()->scAccounts->first()?->getKey())
                 ->required(),
-            DatePicker::make('from')->before(date: '364 days ago')->label('How far back to retrieve data?')->required(),
+            DatePicker::make('from')
+                ->default(now()->subYear())
+                ->maxDate(now()->subYear())
+                ->label('How far back to retrieve data?')
+                ->required(),
         ];
     }
 }
