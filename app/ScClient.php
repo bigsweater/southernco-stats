@@ -2,7 +2,6 @@
 
 namespace App;
 
-use App\Exceptions\DataMissingFromSuccessfulResponse;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use DOMDocument;
@@ -14,7 +13,6 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Illuminate\Support\Stringable;
 use Illuminate\Support\Traits\ForwardsCalls;
 
 class ScClient

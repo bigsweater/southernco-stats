@@ -24,6 +24,8 @@ class UpdateDailyReportsJob implements ShouldQueue
         public ?Carbon $startDate = null,
         public ?Carbon $endDate = null,
     ) {
+        $this->startDate = $startDate ?? now()->subMonth();
+        $this->endDate = $endDate ?? now();
     }
 
     public function handle(): void
