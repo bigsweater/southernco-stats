@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Component;
 
-class DailyReportBackfill extends Component implements HasForms
+class DailyReportsBackfillForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
@@ -22,9 +22,14 @@ class DailyReportBackfill extends Component implements HasForms
     public string $from;
     public ?string $batchId = null;
 
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
     public function render()
     {
-        return view('livewire.daily-report-backfill');
+        return view('livewire.daily-reports-backfill-form');
     }
 
     public function backfill(): void
@@ -97,8 +102,13 @@ class DailyReportBackfill extends Component implements HasForms
         return [
             Select::make('accountId')
                 ->options(auth()->user()->scAccounts()->pluck('description', 'id'))
+                ->default(auth()->user()->scAccounts->first()?->getKey())
                 ->required(),
-            DatePicker::make('from')->before(date: '1 month ago')->label('How far back to retrieve data?')->required(),
+            DatePicker::make('from')
+                ->maxDate(now()->subMonth())
+                ->default(now()->subMonth())
+                ->label('How far back to retrieve data?')
+                ->required(),
         ];
     }
 }

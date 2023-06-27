@@ -4,7 +4,6 @@ use App\Jobs\UpdateDailyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use App\Models\ScDailyReport;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 
 use function Pest\Laravel\freezeSecond;
