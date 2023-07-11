@@ -3,7 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\HourlyReportsBackfillWidget;
-use App\Filament\Widgets\HourlyReportsListWidget;
+use App\Filament\Widgets\HourlyReportsTableWidget;
 use Filament\Pages\Page;
 
 class HourlyReports extends Page
@@ -15,7 +15,7 @@ class HourlyReports extends Page
     public function getWidgets(): array
     {
         return [
-            HourlyReportsListWidget::class,
+            HourlyReportsTableWidget::class,
             HourlyReportsBackfillWidget::class,
         ];
     }

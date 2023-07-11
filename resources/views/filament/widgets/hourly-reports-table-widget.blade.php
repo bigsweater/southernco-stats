@@ -1,5 +1,5 @@
 <x-filament::widget>
     <x-filament::card>
-        <livewire:hourly-reports-list />
+        <livewire:hourly-reports-table />
     </x-filament::card>
 </x-filament::widget>
