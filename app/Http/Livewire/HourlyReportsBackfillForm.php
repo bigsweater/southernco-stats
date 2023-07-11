@@ -22,6 +22,11 @@ class HourlyReportsBackfillForm extends Component implements HasForms
     public string $from;
     public ?string $batchId = null;
 
+    public function mount(): void
+    {
+        $this->form->fill();
+    }
+
     public function backfill(): void
     {
         $this->form->getState();
@@ -92,8 +97,13 @@ class HourlyReportsBackfillForm extends Component implements HasForms
         return [
             Select::make('accountId')
                 ->options(auth()->user()->scAccounts()->pluck('description', 'id'))
+                ->default(auth()->user()->scAccounts->first()?->getKey())
                 ->required(),
-            DatePicker::make('from')->before(date: '2 days ago')->label('How far back to retrieve data?')->required(),
+            DatePicker::make('from')
+                ->maxDate(date: '3 days ago')
+                ->default(now()->subDays(3))
+                ->label('How far back to retrieve data?')
+                ->required(),
         ];
     }
 
