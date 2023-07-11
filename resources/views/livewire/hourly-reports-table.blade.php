@@ -5,7 +5,7 @@
         </h2>
 
         <form
-            wire:submit.prevent="updateDailyReports"
+            wire:submit.prevent="updateHourlyReports"
             @if($this->isUpdating())
             wire:poll
             disabled

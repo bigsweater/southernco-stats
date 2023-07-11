@@ -15,13 +15,13 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-class HourlyReportsList extends Component implements HasTable
+class HourlyReportsTable extends Component implements HasTable
 {
     use InteractsWithTable;
 
     public ?string $batchId = null;
 
-    public function updateDailyReports()
+    public function updateHourlyReports()
     {
         $batch = Bus::batch([]);
 
@@ -75,6 +75,6 @@ class HourlyReportsList extends Component implements HasTable
 
     public function render()
     {
-        return view('livewire.hourly-reports-list');
+        return view('livewire.hourly-reports-table');
     }
 }
