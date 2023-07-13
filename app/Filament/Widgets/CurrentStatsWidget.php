@@ -20,6 +20,8 @@ class CurrentStatsWidget extends BaseWidget
 
     protected static ?string $pollingInterval = '900s';
 
+    private float $unavailableValueThreshold = 0.0001;
+
     public function getScCredentialsProperty(): ?ScCredentials
     {
         return auth()->user()->scCredentials;
@@ -153,7 +155,7 @@ class CurrentStatsWidget extends BaseWidget
 
         $cost = Arr::get($this->stats, 'DollarsToDate', 0);
 
-        if (intval($cost) === 0) {
+        if ($cost < $this->unavailableValueThreshold) {
             return 'Not yet available';
         }
 
@@ -170,7 +172,7 @@ class CurrentStatsWidget extends BaseWidget
         $low = Arr::get($this->stats, 'ProjectedUsageLow', 0);
         $high = Arr::get($this->stats, 'ProjectedUsageHigh', 0);
 
-        if (intval($low) === 0 && intval($high) === 0) {
+        if ($low < $this->unavailableValueThreshold && $high < $this->unavailableValueThreshold) {
             return 'Not yet available';
         }
 
@@ -186,7 +188,7 @@ class CurrentStatsWidget extends BaseWidget
         $low = Arr::get($this->stats, 'ProjectedBillAmountLow', 0);
         $high = Arr::get($this->stats, 'ProjectedBillAmountHigh', 0);
 
-        if (intval($low) === 0 && intval($high) === 0) {
+        if ($low < $this->unavailableValueThreshold && $high < $this->unavailableValueThreshold) {
             return 'Not yet available';
         }
 
@@ -204,7 +206,7 @@ class CurrentStatsWidget extends BaseWidget
 
         $cost = Arr::get($this->stats, 'AverageDailyCost', 0);
 
-        if (intval($cost) === 0) {
+        if ($cost < $this->unavailableValueThreshold) {
             return 'Not yet available';
         }
 
@@ -221,7 +223,7 @@ class CurrentStatsWidget extends BaseWidget
 
         $usage = Arr::get($this->stats, 'AverageDailyUsage', 0);
 
-        if (intval($usage) === 0) {
+        if ($usage < $this->unavailableValueThreshold) {
             return 'Not yet available';
         }
 
