@@ -51,7 +51,7 @@ class MonthlyReportsTable extends Component implements HasTable
             TextColumn::make('period_start_at')->label('Start')->date(),
             TextColumn::make('period_end_at')->label('End')->date(),
             TextColumn::make('cost_usd')->label('Cost')->formatStateUsing(
-                fn (?string $state) => $state ? "\${$state}" : 'incomplete'
+                fn (?string $state) => $state ? '$'.number_format($state, 2) : 'incomplete'
             ),
             TextColumn::make('usage_kwh')->label('Usage')->formatStateUsing(
                 fn (?string $state) => $state ? "{$state} kwh" : 'incomplete'

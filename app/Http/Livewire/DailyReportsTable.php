@@ -49,13 +49,13 @@ class DailyReportsTable extends Component implements HasTable
             TextColumn::make('account_number')->label('Account Number'),
             TextColumn::make('day_at')->label('Date')->date(),
             TextColumn::make('weekday_cost_usd')->label('Weekday Cost')->formatStateUsing(
-                fn (?string $state) => $state ? "\${$state}" : ''
+                fn (?string $state) => $state ? '$'.number_format($state, 2) : ''
             ),
             TextColumn::make('weekday_usage_kwh')->label('Weekday Usage')->formatStateUsing(
                 fn (?string $state) => $state ? "{$state} kwh" : ''
             ),
             TextColumn::make('weekend_cost_usd')->label('Weekend Cost')->formatStateUsing(
-                fn (?string $state) => $state ? "\${$state}" : ''
+                fn (?string $state) => $state ? '$'.number_format($state, 2) : ''
             ),
             TextColumn::make('weekend_usage_kwh')->label('Weekend Usage')->formatStateUsing(
                 fn (?string $state) => $state ? "{$state} kwh" : ''
