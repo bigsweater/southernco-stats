@@ -14,7 +14,7 @@ use Illuminate\Support\HtmlString;
 
 class CurrentStatsWidget extends BaseWidget
 {
-    public ?int $scAccountId;
+    public ?int $scAccountId = null;
     public ?array $stats = null;
 
     protected static ?string $pollingInterval = '900s';
