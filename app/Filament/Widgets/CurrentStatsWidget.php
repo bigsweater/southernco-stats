@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\CurrentUsageCacheKey;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use App\Models\ScMonthlyReport;
@@ -46,18 +47,13 @@ class CurrentStatsWidget extends BaseWidget
     public function fetchStats()
     {
         $this->stats = Cache::remember(
-            key: $this->getCacheKey(),
-            ttl: 3600,
+            key: (string) new CurrentUsageCacheKey($this->report, $this->scAccountId),
+            ttl: 900, // 15 minutes
             callback: fn () => $this->scClient->getCurrentUsageForMonthlyReport(
                 $this->scAccount,
                 $this->report
             )
         );
-    }
-
-    private function getCacheKey(): string
-    {
-        return $this->report->period_start_at->getPreciseTimestamp() . '_' . $this->scAccountId . '_current_usage';
     }
 
     protected function getCards(): array

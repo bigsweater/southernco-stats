@@ -1,18 +1,22 @@
 <?php
 
+use App\CurrentUsageCacheKey;
 use App\Filament\Widgets\CurrentStatsWidget;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use App\Models\ScMonthlyReport;
 use App\Models\User;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
+use function Pest\Laravel\freezeSecond;
+use function Pest\Laravel\travelTo;
 use function Pest\Livewire\livewire;
 
 beforeEach(function () {
     Http::fake([
-        '*' => Http::response(<<<JSON
+        '*' => Http::response($this->jsonResponse = <<<JSON
             {
             "StatusCode": 200,
             "Message": "Successfully retrieved My Power Usage data for Daily Graph",
@@ -107,6 +111,70 @@ test('it fetches stats', function () {
         'period_end_at' => $end = now()->addDays(15),
     ]);
     $this->actingAs($credentials->user);
+
+    livewire(CurrentStatsWidget::class, ['scAccountId' => $account->getKey()])
+        ->call('fetchStats');
+
+    Http::assertSent(function (Request $request) use ($start, $end) {
+        return $request->data()['StartDate'] === $start->format('m/d/Y')
+            && $request->data()['EndDate'] === $end->format('m/d/Y');
+    });
+});
+
+test('it caches fetched stats', function () {
+    $credentials = ScCredentials::factory()->create();
+    $account = ScAccount::factory()->for($credentials->user)->create();
+    ScMonthlyReport::factory()->for($account)->create([
+        'period_start_at' => now()->subDays(15),
+        'period_end_at' => now()->addDays(15),
+    ]);
+    $this->actingAs($credentials->user);
+
+    Cache::shouldReceive('remember')
+        ->once()
+        ->andReturn(json_decode($this->jsonResponse, true));
+
+    livewire(CurrentStatsWidget::class, ['scAccountId' => $account->getKey()])
+        ->call('fetchStats');
+});
+
+test('it uses cached stats before cache expiry', function () {
+    $credentials = ScCredentials::factory()->create();
+    $account = ScAccount::factory()->for($credentials->user)->create();
+    $report = ScMonthlyReport::factory()->for($account)->create([
+        'period_start_at' => now()->subDays(15),
+        'period_end_at' => now()->addDays(15),
+    ]);
+    Cache::remember(
+        (string) new CurrentUsageCacheKey($report, $account->id),
+        900,
+        fn () => json_decode($this->jsonResponse, true)
+    );
+    $this->actingAs($credentials->user);
+
+    livewire(CurrentStatsWidget::class, ['scAccountId' => $account->getKey()])
+        ->call('fetchStats');
+
+    Http::assertNothingSent();
+});
+
+test('it makes request after cache expiry', function () {
+    freezeSecond();
+
+    $credentials = ScCredentials::factory()->create();
+    $account = ScAccount::factory()->for($credentials->user)->create();
+    $report = ScMonthlyReport::factory()->for($account)->create([
+        'period_start_at' => $start = now()->subDays(15),
+        'period_end_at' => $end = now()->addDays(15),
+    ]);
+    Cache::remember(
+        (string) new CurrentUsageCacheKey($report, $account->id),
+        900,
+        fn () => json_decode($this->jsonResponse, true)
+    );
+    $this->actingAs($credentials->user);
+
+    travelTo(now()->addSeconds(901));
 
     livewire(CurrentStatsWidget::class, ['scAccountId' => $account->getKey()])
         ->call('fetchStats');
