@@ -4,6 +4,7 @@ namespace App;
 
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
+use App\Models\ScMonthlyReport;
 use DOMDocument;
 use DOMException;
 use DOMXPath;
@@ -116,6 +117,25 @@ class ScClient
             ->throw();
 
         return $this->getDataFromResponse($response);
+    }
+
+    public function getCurrentUsageForMonthlyReport(
+        ScAccount $account,
+        ScMonthlyReport $monthlyReport
+    ): array {
+        $startDate = $monthlyReport->period_start_at ?? now()->subMonth();
+        $endDate = $monthlyReport->period_end_at ?? now();
+
+        return $this->authenticatedClient()
+            ->get(self::SC_API_BASE_URL . "/api/MyPowerUsage/MPUData/{$account->account_number}/Daily", [
+                'StartDate' => $startDate->format('m/d/Y'),
+                'EndDate' => $endDate->format('m/d/Y'),
+                'ServicePointNumber' => $account->service_point_number,
+                'intervalBehavior' => 'Automatic',
+                'OPCO' => $account->company->name,
+            ])
+            ->throw()
+            ->json('Data');
     }
 
     public function getJwt(): string
