@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Holidays;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +26,7 @@ class ScHourlyReport extends Model
     public function isPeak(): Attribute
     {
         return Attribute::make(
-            get: function () {
+            get: function (): bool {
                 if (
                     is_null($this->peak_hours_from)
                     || is_null($this->peak_hours_to)
@@ -33,10 +34,19 @@ class ScHourlyReport extends Model
                     return false;
                 }
 
-                return $this->hour_at->isBetween(
-                    $this->hour_at->setTime($this->peak_hours_from, 0),
-                    $this->hour_at->setTime($this->peak_hours_to, 0)
-                );
+                if ($this->hour_at->isWeekend()) {
+                    return false;
+                }
+
+                if (
+                    $this->hour_at->isSameDay(Holidays::independenceDay($this->hour_at->year))
+                    || $this->hour_at->isSameDay(Holidays::laborDay($this->hour_at->year))
+                ) {
+                    return false;
+                }
+
+                return $this->hour_at->hour >= $this->peak_hours_from
+                    && $this->hour_at->hour < $this->peak_hours_to;
             }
         );
     }
