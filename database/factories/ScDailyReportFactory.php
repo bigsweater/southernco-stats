@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\ScAccount;
+use App\Models\ScMonthlyReport;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
@@ -35,5 +36,16 @@ class ScDailyReportFactory extends Factory
             'overage_high_kwh' => $this->faker->randomFloat(2, 0.01, 999.00),
             'average_daily_cost_usd' => $this->faker->randomFloat(2, 0.01, 999.00),
         ];
+    }
+
+    public function forMonthlyReport(ScMonthlyReport $report): static
+    {
+        return $this->state(fn () => [
+            'sc_account_id' => $report->sc_account_id,
+            'day_at' => $this->faker->dateTimeBetween(
+                $report->period_start_at,
+                $report->period_end_at,
+            )
+        ]);
     }
 }

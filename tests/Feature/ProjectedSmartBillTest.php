@@ -1,12 +1,13 @@
 <?php
 
+use App\Models\ScDailyReport;
 use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
-use App\ProjectedBill;
+use App\ProjectedSmartBill;
 
 beforeEach(function () {
     $this->report = ScMonthlyReport::factory()->create();
-    $this->bill = new ProjectedBill($this->report);
+    $this->bill = new ProjectedSmartBill($this->report);
 });
 
 test('current demand is null if no hourly data exists for current period', function () {
@@ -114,4 +115,38 @@ test('it calculates off peak cost', function () {
     ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create();
 
     expect($this->bill->offPeakCost())->toBe(100);
+});
+
+test('it calculates total usage', function () {
+    // Our usage
+    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
+        'weekday_usage_kwh' => 5.0,
+        'weekend_usage_kwh' => null,
+    ]);
+    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
+        'weekend_usage_kwh' => 2.0,
+        'weekday_usage_kwh' => null,
+    ]);
+
+    // Somebody else's usage
+    ScDailyReport::factory(2)->create();
+
+    expect($this->bill->totalUsage())->toBe(14);
+});
+
+test('it calculates total cost', function () {
+    // Our usage
+    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
+        'weekday_cost_usd' => 5.0,
+        'weekend_cost_usd' => null,
+    ]);
+    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
+        'weekend_cost_usd' => 2.0,
+        'weekday_cost_usd' => null,
+    ]);
+
+    // Somebody else's usage
+    ScDailyReport::factory(2)->create();
+
+    expect($this->bill->totalCost())->toBe(14);
 });

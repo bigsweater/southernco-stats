@@ -6,9 +6,21 @@ use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
 use Illuminate\Support\Facades\DB;
 
-class ProjectedBill
+class ProjectedSmartBill
 {
-    private static float $demandCost = 8.68;
+    /**
+     * These are dollars charged per kWH of usage or demand.
+     * Because the Ga Power API is private and seems to be used exclusively
+     * for presenting usage data in their dashboard, some days are missing from
+     * the hourly reports (e.g. holidays).
+     *
+     * There are other tarrifs not accounted for here.
+     *
+     * @see https://www.georgiapower.com/content/dam/georgia-power/pdfs/residential-pdfs/tariffs/2023/TOU-RD-7.pdf
+     */
+    public static float $demandMultiple = 8.68;
+    public static float $onPeakMultiple = 0.101909;
+    public static float $offPeakMultiple = 0.010895;
 
     private array $cache = [];
 
@@ -23,13 +35,12 @@ class ProjectedBill
             return null;
         }
 
-        return $this->demand() * $this::$demandCost;
+        return $this->demand() * $this::$demandMultiple;
     }
 
     public function demand(): float|int|null
     {
         // Demand is the highest single hour of usage in a given billing period.
-        // https://www.georgiapower.com/content/dam/georgia-power/pdfs/residential-pdfs/tariffs/2023/TOU-RD-7.pdf
         return $this->remember(
             'currentDemand',
             fn () => ScHourlyReport::select('hour_at', 'usage_kwh')
@@ -59,6 +70,16 @@ class ProjectedBill
         )->peak_hours_usage_kwh ?? null;
     }
 
+    /**
+     * This query retrieves and sums all on-peak hours and dollars from the
+     * hourly reports for the month stored in $monthlyReport.
+     *
+     * On-peak hours weekdays, except Independence and Labor days, between
+     * 14:00 and 19:00 .
+     *
+     * Here we filter out weekends and holidays for the current billing
+     * month, and select only hours which fall in the peak window.
+     */
     private function getOnPeakData(): \stdClass
     {
         return DB::query()->fromSub(
@@ -95,6 +116,16 @@ class ProjectedBill
         )->off_peak_hours_usage_kwh ?? null;
     }
 
+    /**
+     * This query retrieves and sums all off-peak hours from the hourly_reports
+     * table for the month stored in $monthlyReport.
+     *
+     * Off-peak hours are weekends, Independence and Labor days, and any
+     * time before 4 or after 7 on weekdays.
+     *
+     * Here we set the off peak time to 0:00 - 24:00 on holidays or
+     * weekends; otherwise we defer to the peak_hours_{from,to} columns.
+     */
     public function getOffPeakData(): \stdClass
     {
         $laborDay = Holidays::laborDay($this->monthlyReport->period_start_at->year);
@@ -132,25 +163,53 @@ class ProjectedBill
             ->first();
     }
 
-    public function totalConventionalCost(): float|int|null
+    public function totalCost(): float|int|null
     {
+        return $this->remember(
+            'days',
+            fn () => $this->getDaysData()
+        )->total_cost;
     }
 
-    public function totalConventionalUsage(): float|int|null
+    public function totalUsage(): float|int|null
     {
+        return $this->remember(
+            'days',
+            fn () => $this->getDaysData()
+        )->total_usage;
     }
 
-    public function totalSmartCost(): float|int|null
+    /**
+     * Get the sum of cost and usage from daily reports for the current monthlyReport.
+     *
+     * We do this by the day (not the hour) since some hours are missing from
+     * the database, and the month may be incomplete and therefore its totals
+     * may be missing from teh API.
+     *
+     * We're assuming here that the daily cost takes into account off- and
+     * on-peak rates.
+     */
+    private function getDaysData(): \stdClass
     {
-    }
-
-    public function totalSmartUsage(): float|int|null
-    {
+        return DB::query()->fromSub(
+            DB::table('sc_daily_reports')
+                ->selectRaw(<<<SQL
+                greatest(weekday_usage_kwh, weekend_usage_kwh) usage_kwh,
+                greatest(weekday_cost_usd, weekend_cost_usd) cost_usd,
+                *
+                SQL)
+                ->where('sc_account_id', $this->monthlyReport->sc_account_id)
+                ->where('day_at', '>=', $this->monthlyReport->period_start_at)
+                ->where('day_at', '<', $this->monthlyReport->period_end_at),
+            'days'
+        )
+            ->select(DB::raw('sum(days.usage_kwh) as total_usage, sum(days.cost_usd) as total_cost'))
+            ->first();
     }
 
     private function remember(string $key, callable $callback): mixed
     {
-        if ($this->cache[$key] ?? false) {
+        if (boolval($this->cache[$key] ?? false)) {
             return $this->cache['currentDemand'];
         }
 
