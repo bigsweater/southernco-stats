@@ -4,10 +4,13 @@ namespace App;
 
 use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
+use App\Traits\HasMemory;
 use Illuminate\Support\Facades\DB;
 
 class ProjectedSmartBill
 {
+    use HasMemory;
+
     /**
      * These are dollars charged per kWH of usage or demand.
      * Because the Ga Power API is private and seems to be used exclusively
@@ -22,7 +25,6 @@ class ProjectedSmartBill
     public static float $onPeakMultiple = 0.101909;
     public static float $offPeakMultiple = 0.010895;
 
-    private array $cache = [];
 
     public function __construct(
         public ScMonthlyReport $monthlyReport
@@ -205,16 +207,5 @@ class ProjectedSmartBill
         )
             ->select(DB::raw('sum(days.usage_kwh) as total_usage, sum(days.cost_usd) as total_cost'))
             ->first();
-    }
-
-    private function remember(string $key, callable $callback): mixed
-    {
-        if (boolval($this->cache[$key] ?? false)) {
-            return $this->cache['currentDemand'];
-        }
-
-        $this->cache[$key] = $callback();
-
-        return $this->cache[$key];
     }
 }
