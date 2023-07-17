@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Holidays;
 use App\Models\ScAccount;
 use App\Models\ScMonthlyReport;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
@@ -26,26 +27,29 @@ class ScHourlyReportFactory extends Factory
         ];
     }
 
-    public function onPeakForPeriod(ScMonthlyReport $report): Factory
-    {
-        $hour = $report->period_start_at->addDay();
-        if (
-            Holidays::independenceDay($hour->year)->isSameDay($hour)
-            || Holidays::laborDay($hour->year)->isSameDay($hour)
-            || $hour->isWeekend()
-        ) {
-            $hour = $hour->next(Carbon::MONDAY);
+    public function onPeakForPeriod(
+        CarbonImmutable $start,
+    ): Factory {
+        $hour = $start->next(Carbon::TUESDAY);
+
+        if (Holidays::independenceDay($hour->year)->isSameDay($hour)) {
+            $hour = $start->next(Carbon::WEDNESDAY);
         }
 
-        $hour = $hour->setHour(16);
-
-        return $this->state(fn () => [ 'hour_at' => $hour ]);
+        return $this->state(function ($attributes) use ($hour): array {
+            return [
+                'hour_at' => $hour->setHour(
+                    $attributes['peak_hours_from'] ?? 17
+                ),
+            ];
+        });
     }
 
-    public function offPeakForPeriod(ScMonthlyReport $report): Factory
-    {
-        $hour = $report->period_start_at->addDay();
+    public function offPeakForPeriod(CarbonImmutable $start): Factory {
+        $hour = $start->addDay()->setHour(0);
 
-        return $this->state(fn () => [ 'hour_at' => $hour->setHour(0) ]);
+        return $this->state(fn () => [
+            'hour_at' => $hour,
+        ]);
     }
 }

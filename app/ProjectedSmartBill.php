@@ -86,17 +86,24 @@ class ProjectedSmartBill
     {
         return DB::query()->fromSub(
             DB::table('sc_hourly_reports')
-                ->select(DB::raw('extract(hour FROM hour_at) AS hour, *'))
+                ->selectRaw(<<<SQL
+                extract(hour FROM hour_at) AS hour,
+                hour_at,
+                usage_kwh,
+                cost_usd,
+                peak_hours_from,
+                peak_hours_to
+                SQL)
                 ->where('sc_account_id', $this->monthlyReport->sc_account_id)
                 ->where('hour_at', '>=', $this->monthlyReport->period_start_at)
                 ->where('hour_at', '<', $this->monthlyReport->period_end_at)
-                ->where(DB::raw('extract(dow FROM hour_at)'), '!=', 0) // Sunday
-                ->where(DB::raw('extract(dow FROM hour_at)'), '!=', 6) // Saturday
-                ->where(DB::raw("date_trunc('day', hour_at)"), '!=', Holidays::laborDay($this->monthlyReport->period_start_at->year))
-                ->where(DB::raw("date_trunc('day', hour_at)"), '!=', Holidays::independenceDay($this->monthlyReport->period_start_at->year)),
+                ->whereRaw('extract(dow FROM hour_at) != 0') // Sunday
+                ->whereRaw('extract(dow FROM hour_at) != 6') // Saturday
+                ->whereRaw("date_trunc('day', hour_at) != ?", [Holidays::laborDay($this->monthlyReport->period_start_at->year)])
+                ->whereRaw("date_trunc('day', hour_at) != ?", [Holidays::independenceDay($this->monthlyReport->period_start_at->year)]),
             'hours'
         )
-            ->select(DB::raw('sum(hours.usage_kwh) as peak_hours_usage_kwh, sum(hours.cost_usd) as peak_hours_cost_usd'))
+            ->selectRaw('sum(hours.usage_kwh) as peak_hours_usage_kwh, sum(hours.cost_usd) as peak_hours_cost_usd')
             ->whereRaw('hours.hour >= hours.peak_hours_from')
             ->whereRaw('hours.hour < hours.peak_hours_to')
             ->first();
@@ -136,7 +143,9 @@ class ProjectedSmartBill
             DB::table('sc_hourly_reports')
                 ->selectRaw(<<<SQL
                 extract(hour FROM hour_at) AS hour,
-                *,
+                hour_at,
+                usage_kwh,
+                cost_usd,
                 CASE
                     WHEN extract(dow FROM hour_at) = 0 THEN 0
                     WHEN extract(dow FROM hour_at) = 6 THEN 0
@@ -159,7 +168,7 @@ class ProjectedSmartBill
                 ->where('hour_at', '<', $this->monthlyReport->period_end_at),
             'hours'
         )
-            ->select(DB::raw('sum(hours.usage_kwh) as off_peak_hours_usage_kwh, sum(hours.cost_usd) as off_peak_hours_cost_usd'))
+            ->selectRaw('sum(hours.usage_kwh) as off_peak_hours_usage_kwh, sum(hours.cost_usd) as off_peak_hours_cost_usd')
             ->whereRaw('hours.hour >= hours.off_peak_start')
             ->whereRaw('hours.hour < hours.off_peak_end')
             ->first();
@@ -167,22 +176,17 @@ class ProjectedSmartBill
 
     public function totalCost(): float|int|null
     {
-        return $this->remember(
-            'days',
-            fn () => $this->getDaysData()
-        )->total_cost;
+        return $this->onPeakCost() + $this->offPeakCost();
     }
 
     public function totalUsage(): float|int|null
     {
-        return $this->remember(
-            'days',
-            fn () => $this->getDaysData()
-        )->total_usage;
+        return $this->onPeakUsage() + $this->offPeakUsage();
     }
 
     /**
-     * Get the sum of cost and usage from daily reports for the current monthlyReport.
+     * Get the sum of cost and usage from hourly reports for the current
+     * monthlyReport.
      *
      * We do this by the day (not the hour) since some hours are missing from
      * the database, and the month may be incomplete and therefore its totals

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ScDailyReport;
 use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
 use App\ProjectedSmartBill;
@@ -51,102 +50,128 @@ test('cost is null if demand is null', function () {
 
 test('it calculates on peak usage', function () {
     // Our usage
-    ScHourlyReport::factory(2)->onPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'usage_kwh' => 5.0,
-    ]);
-    ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'usage_kwh' => 50.0,
-    ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'usage_kwh' => 5.0,
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->offPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'usage_kwh' => 50.0,
+        ]);
 
     // Somebody else's usage
-    ScHourlyReport::factory(2)->onPeakForPeriod($this->report)->create();
+    ScHourlyReport::factory(2)->onPeakForPeriod($this->report->period_start_at)->create();
 
     expect($this->bill->onPeakUsage())->toBe(10);
 });
 
 test('it calculates on peak cost', function () {
     // Our usage
-    ScHourlyReport::factory(2)->onPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'cost_usd' => 5.0,
-    ]);
-    ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'cost_usd' => 50.0,
-    ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'cost_usd' => 5.0,
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->offPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'cost_usd' => 50.0,
+        ]);
 
     // Somebody else's usage
-    ScHourlyReport::factory(2)->onPeakForPeriod($this->report)->create();
+    ScHourlyReport::factory(2)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create();
 
     expect($this->bill->onPeakCost())->toBe(10);
 });
 
 test('it calculates off peak usage', function () {
     // Our usage
-    ScHourlyReport::factory(2)->onPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'usage_kwh' => 5.0,
-    ]);
-    ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'usage_kwh' => 50.0,
-    ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'usage_kwh' => 5.0,
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->offPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'usage_kwh' => 50.0,
+        ]);
 
     // Somebody else's usage
-    ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create();
+    ScHourlyReport::factory(2)->offPeakForPeriod($this->report->period_start_at)->create();
 
     expect($this->bill->offPeakUsage())->toBe(100);
 });
 
 test('it calculates off peak cost', function () {
     // Our usage
-    ScHourlyReport::factory(2)->onPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'cost_usd' => 5.0,
-    ]);
-    ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create([
-        'sc_account_id' => $this->report->sc_account_id,
-        'cost_usd' => 50.0,
-    ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'cost_usd' => 5.0,
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->offPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'cost_usd' => 50.0,
+        ]);
 
     // Somebody else's usage
-    ScHourlyReport::factory(2)->offPeakForPeriod($this->report)->create();
+    ScHourlyReport::factory(2)->offPeakForPeriod($this->report->period_start_at)->create();
 
     expect($this->bill->offPeakCost())->toBe(100);
 });
 
 test('it calculates total usage', function () {
     // Our usage
-    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
-        'weekday_usage_kwh' => 5.0,
-        'weekend_usage_kwh' => null,
-    ]);
-    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
-        'weekend_usage_kwh' => 2.0,
-        'weekday_usage_kwh' => null,
-    ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'usage_kwh' => 5.0,
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->offPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'usage_kwh' => 50.0,
+        ]);
 
     // Somebody else's usage
-    ScDailyReport::factory(2)->create();
+    ScHourlyReport::factory(2)->offPeakForPeriod($this->report->period_start_at)->create();
 
-    expect($this->bill->totalUsage())->toBe(14);
+    expect($this->bill->totalUsage())->toBe(110);
 });
 
 test('it calculates total cost', function () {
     // Our usage
-    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
-        'weekday_cost_usd' => 5.0,
-        'weekend_cost_usd' => null,
-    ]);
-    ScDailyReport::factory(2)->forMonthlyReport($this->report)->create([
-        'weekend_cost_usd' => 2.0,
-        'weekday_cost_usd' => null,
-    ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->onPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'cost_usd' => 5.0,
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($this->report->scAccount)
+        ->offPeakForPeriod($this->report->period_start_at)
+        ->create([
+            'cost_usd' => 50.0,
+        ]);
 
     // Somebody else's usage
-    ScDailyReport::factory(2)->create();
+    ScHourlyReport::factory(2)->offPeakForPeriod($this->report->period_start_at)->create();
 
-    expect($this->bill->totalCost())->toBe(14);
+    expect($this->bill->totalCost())->toBe(110);
 });
