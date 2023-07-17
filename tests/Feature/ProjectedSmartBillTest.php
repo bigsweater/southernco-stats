@@ -3,9 +3,13 @@
 use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
 use App\ProjectedSmartBill;
+use Illuminate\Support\Carbon;
 
 beforeEach(function () {
-    $this->report = ScMonthlyReport::factory()->create();
+    $this->report = ScMonthlyReport::factory()->create([
+        'period_start_at' => Carbon::make('July 1, 2023'),
+        'period_end_at' => Carbon::make('August 1, 2023'),
+    ]);
     $this->bill = new ProjectedSmartBill($this->report);
 });
 
@@ -174,4 +178,33 @@ test('it calculates total cost', function () {
     ScHourlyReport::factory(2)->offPeakForPeriod($this->report->period_start_at)->create();
 
     expect($this->bill->totalCost())->toBe(110);
+});
+
+test('it does not include on peak hours during off peak months', function () {
+    $report = ScMonthlyReport::factory()->create([
+        'period_start_at' => 'January 1, 2023',
+        'period_end_at' => 'February 1, 2023',
+    ]);
+
+    ScHourlyReport::factory(2)
+        ->for($report->scAccount)
+        ->onPeakForPeriod($report->period_start_at)
+        ->create([
+            'cost_usd' => 5.0,
+            'usage_kwh' => 5.0
+        ]);
+    ScHourlyReport::factory(2)
+        ->for($report->scAccount)
+        ->offPeakForPeriod($report->period_start_at)
+        ->create([
+            'cost_usd' => 50.0,
+            'usage_kwh' => 20.0
+        ]);
+
+    $bill = new ProjectedSmartBill($report);
+
+    expect($bill->onPeakUsage())->toBeNull();
+    expect($bill->onPeakCost())->toBeNull();
+    expect($bill->offPeakUsage())->toBe(50);
+    expect($bill->offPeakCost())->toBe(110);
 });

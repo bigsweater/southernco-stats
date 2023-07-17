@@ -5,6 +5,7 @@ namespace App;
 use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
 use App\Traits\HasMemory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ProjectedSmartBill
@@ -21,9 +22,9 @@ class ProjectedSmartBill
      *
      * @see https://www.georgiapower.com/content/dam/georgia-power/pdfs/residential-pdfs/tariffs/2023/TOU-RD-7.pdf
      */
-    public static float $demandMultiple = 8.68;
-    public static float $onPeakMultiple = 0.101909;
-    public static float $offPeakMultiple = 0.010895;
+    public static float $demandRateUsd = 8.68;
+    public static float $onPeakRateUsd = 0.101909;
+    public static float $offPeakRateUsd = 0.010895;
 
 
     public function __construct(
@@ -37,7 +38,7 @@ class ProjectedSmartBill
             return null;
         }
 
-        return $this->demand() * $this::$demandMultiple;
+        return $this->demand() * $this::$demandRateUsd;
     }
 
     public function demand(): float|int|null
@@ -77,7 +78,7 @@ class ProjectedSmartBill
      * hourly reports for the month stored in $monthlyReport.
      *
      * On-peak hours weekdays, except Independence and Labor days, between
-     * 14:00 and 19:00 .
+     * 14:00 and 19:00 June through September.
      *
      * Here we filter out weekends and holidays for the current billing
      * month, and select only hours which fall in the peak window.
@@ -97,6 +98,8 @@ class ProjectedSmartBill
                 ->where('sc_account_id', $this->monthlyReport->sc_account_id)
                 ->where('hour_at', '>=', $this->monthlyReport->period_start_at)
                 ->where('hour_at', '<', $this->monthlyReport->period_end_at)
+                ->whereRaw("date_trunc('day', hour_at) >= ?", [$this->smartRateStart()])
+                ->whereRaw("date_trunc('day', hour_at) < ?", [$this->smartRateEnd()])
                 ->whereRaw('extract(dow FROM hour_at) != 0') // Sunday
                 ->whereRaw('extract(dow FROM hour_at) != 6') // Saturday
                 ->whereRaw("date_trunc('day', hour_at) != ?", [Holidays::laborDay($this->monthlyReport->period_start_at->year)])
@@ -137,8 +140,12 @@ class ProjectedSmartBill
      */
     public function getOffPeakData(): \stdClass
     {
-        $laborDay = Holidays::laborDay($this->monthlyReport->period_start_at->year);
-        $independenceDay = Holidays::independenceDay($this->monthlyReport->period_start_at->year);
+        $year = $this->monthlyReport->period_start_at->year;
+        $laborDay = Holidays::laborDay($year);
+        $independenceDay = Holidays::independenceDay($year);
+        $smartRateStart = $this->smartRateStart();
+        $smartRateEnd = $this->smartRateEnd();
+
         return DB::query()->fromSub(
             DB::table('sc_hourly_reports')
                 ->selectRaw(<<<SQL
@@ -147,6 +154,8 @@ class ProjectedSmartBill
                 usage_kwh,
                 cost_usd,
                 CASE
+                    WHEN date_trunc('day', hour_at) < '$smartRateStart' THEN 0
+                    WHEN date_trunc('day', hour_at) >= '$smartRateEnd' THEN 0
                     WHEN extract(dow FROM hour_at) = 0 THEN 0
                     WHEN extract(dow FROM hour_at) = 6 THEN 0
                     WHEN date_trunc('day', hour_at) = '$laborDay' THEN 0
@@ -155,6 +164,8 @@ class ProjectedSmartBill
                 ELSE peak_hours_to
                 END AS off_peak_start,
                 CASE
+                    WHEN date_trunc('day', hour_at) < '$smartRateStart' THEN 24
+                    WHEN date_trunc('day', hour_at) >= '$smartRateEnd' THEN 24
                     WHEN extract(dow FROM hour_at) = 0 THEN 24
                     WHEN extract(dow FROM hour_at) = 6 THEN 24
                     WHEN date_trunc('day', hour_at) = '$laborDay' THEN 24
@@ -172,6 +183,16 @@ class ProjectedSmartBill
             ->whereRaw('hours.hour >= hours.off_peak_start')
             ->whereRaw('hours.hour < hours.off_peak_end')
             ->first();
+    }
+
+    private function smartRateStart(): Carbon
+    {
+        return Carbon::create($this->monthlyReport->period_start_at->year, 6, 1, 0, 0, 0);
+    }
+
+    private function smartRateEnd(): Carbon
+    {
+        return Carbon::create($this->monthlyReport->period_start_at->year, 10, 1, 0, 0, 0);
     }
 
     public function totalCost(): float|int|null
