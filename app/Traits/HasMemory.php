@@ -14,7 +14,7 @@ trait HasMemory
      */
     private function remember(string $key, callable $callback): mixed
     {
-        if ($this->cache[$key] ?? false) {
+        if (isset($this->cache[$key])) {
             return $this->cache[$key];
         }
 
