@@ -5,12 +5,15 @@ namespace App\Filament\Widgets;
 use App\CurrentUsageCacheKey;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
+use App\Models\ScDailyReport;
+use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
 use App\ScClient;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 class CurrentStatsWidget extends BaseWidget
@@ -105,6 +108,13 @@ class CurrentStatsWidget extends BaseWidget
             )->extraAttributes([
                 'wire:loading.class' => 'opacity-50',
             ])->description("Since {$this->report->period_start_at->diffForHumans()}"),
+
+            Card::make(
+                'Current highest demand',
+                $this->getCurrentDemandString()
+            )->extraAttributes([
+                'wire:loading.class' => 'opacity-50',
+            ])->description(new HtmlString("Highest one-hour usage since {$this->report->period_start_at->toFormattedDateString()}. <a href=\"https://www.georgiapower.com/content/dam/georgia-power/pdfs/residential-pdfs/tariffs/2023/TOU-RD-7.pdf\">More information</a>")),
 
             Card::make(
                 'Projected usage',
@@ -228,5 +238,24 @@ class CurrentStatsWidget extends BaseWidget
         }
 
         return "{$usage} kWh";
+    }
+
+    private function getCurrentDemandString(): string
+    {
+        $demand = ScHourlyReport::select('hour_at', 'usage_kwh')
+            ->where('hour_at', '>=', $this->report->period_start_at)
+            ->where('hour_at', '<=', $this->report->period_end_at)
+            ->where('sc_account_id', $this->scAccountId)
+            ->orderBy('usage_kwh', 'desc')
+            ->limit(1)
+            ->first()
+            ?->usage_kwh;
+
+        if (!$demand) {
+            return 'Not yet available';
+        }
+
+        // https://www.georgiapower.com/content/dam/georgia-power/pdfs/residential-pdfs/tariffs/2023/TOU-RD-7.pdf
+        return "{$demand} kWh, $" . number_format($demand * 8.68, 2);
     }
 }
