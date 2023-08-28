@@ -3,7 +3,8 @@
 namespace App\Providers;
 
 use App\ScClient;
-use Filament\Facades\Filament;
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -28,8 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Filament::registerStyles([
-        //     Vite::asset('resources/css/app.css')
-        // ]);
+        FilamentAsset::register([
+            Css::make('custom-tw', Vite::asset('resources/css/app.css'))
+        ]);
     }
 }
