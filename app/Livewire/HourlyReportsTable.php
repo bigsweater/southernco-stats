@@ -1,22 +1,26 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Jobs\UpdateHourlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScHourlyReport;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-class HourlyReportsTable extends Component implements HasTable
+class HourlyReportsTable extends Component implements HasTable, HasForms
 {
+    use InteractsWithForms;
     use InteractsWithTable;
 
     public ?string $batchId = null;
@@ -37,6 +41,12 @@ class HourlyReportsTable extends Component implements HasTable
         return boolval($this->batchId)
             && boolval($batch = Bus::findBatch($this->batchId))
             && !$batch->finished();
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table->columns($this->getTableColumns())
+            ->query($this->getTableQuery());
     }
 
     protected function getTableColumns(): array

@@ -15,9 +15,9 @@
         {{ $this->form }}
 
         <div class="pt-6 flex items-baseline space-x-4">
-            <x-filament-support::button type="submit">
+            <x-filament::button type="submit">
                 Submit
-            </x-filament-support::button>
+            </x-filament::button>
 
             @if($this->isBackfilling)
             <span class="text-gray-600 text-sm">

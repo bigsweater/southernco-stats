@@ -17,9 +17,9 @@
                 <p class="animate-pulse text-sm text-gray-300">Loading...</p>
                 @endif
 
-                <x-filament-support::button type="submit">
+                <x-filament::button type="submit">
                     Refresh
-                </x-filament-support::button>
+                </x-filament::button>
             </div>
         </form>
     </div>

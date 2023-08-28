@@ -1,22 +1,26 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Jobs\UpdateMonthlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScMonthlyReport;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
-class MonthlyReportsTable extends Component implements HasTable
+class MonthlyReportsTable extends Component implements HasTable, HasForms
 {
+    use InteractsWithForms;
     use InteractsWithTable;
 
     public ?string $batchId = null;
@@ -44,7 +48,14 @@ class MonthlyReportsTable extends Component implements HasTable
         $this->batchId = $batch->dispatch()->id;
     }
 
-    protected function getTableColumns(): array
+    public function table(Table $table): Table
+    {
+        return $table->query($this->getTableQuery())
+            ->columns($this->getTableColumns())
+            ->filters($this->getTableFilters());
+    }
+
+    private function getTableColumns(): array
     {
         return [
             TextColumn::make('account_number')->label('Account Number'),
@@ -61,7 +72,7 @@ class MonthlyReportsTable extends Component implements HasTable
         ];
     }
 
-    protected function getTableFilters(): array
+    private function getTableFilters(): array
     {
         return [
             Filter::make('period')->form([
@@ -82,7 +93,7 @@ class MonthlyReportsTable extends Component implements HasTable
         ];
     }
 
-    protected function getTableQuery(): Builder
+    private function getTableQuery(): Builder
     {
         return ScMonthlyReport::whereIn(
             'sc_account_id',

@@ -3,9 +3,9 @@
         {{ $this->form }}
 
         <div class="mt-6">
-            <x-filament-support::button type="submit">
+            <x-filament::button type="submit">
                 Update Credentials
-            </x-filament-support::button>
+            </x-filament::button>
         </div>
     </form>
 </div>

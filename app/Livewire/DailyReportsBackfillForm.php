@@ -1,19 +1,20 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
-use App\Jobs\UpdateMonthlyReportsJob;
+use App\Jobs\UpdateDailyReportsJob;
 use App\Models\ScAccount;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Bus\Batch;
+use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Livewire\Component;
 
-class MonthlyReportsBackfillForm extends Component implements HasForms
+class DailyReportsBackfillForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
@@ -28,7 +29,7 @@ class MonthlyReportsBackfillForm extends Component implements HasForms
 
     public function render()
     {
-        return view('livewire.monthly-reports-backfill-form');
+        return view('livewire.daily-reports-backfill-form');
     }
 
     public function backfill(): void
@@ -40,21 +41,11 @@ class MonthlyReportsBackfillForm extends Component implements HasForms
         $account = ScAccount::findOrFail($this->accountId);
 
         $from = new Carbon($this->from);
-        $diff = $from->diffInYears(now());
+        $to = $from->copy()->addMonth();
 
-        for ($i = 0; $i < $diff; $i++) {
-            if ($i !== 0) {
-                $from->addYear();
-            }
+        $this->batchJobsByMonth($account, $from, $to, $batch);
 
-            $batch->add(new UpdateMonthlyReportsJob(
-                account: $account,
-                startDate: $from->copy(),
-                endDate: $from->copy()->addYear()
-            ));
-        }
-
-        $this->batchId = $batch->dispatch()->id;
+        $this->batchId = $batch->allowFailures()->dispatch()->id;
     }
 
     public function getBatchProperty(): ?Batch
@@ -67,17 +58,43 @@ class MonthlyReportsBackfillForm extends Component implements HasForms
     public function getIsBackfillingProperty(): bool
     {
         return $this->batch
-            && !$this->batch->finished()
-            && !$this->batch->canceled();
+            && !$this->batch?->finished();
     }
 
     public function getProgressProperty(): ?int
     {
-        if (!$this->batch) {
-            return null;
+        return $this->batch?->progress();
+    }
+
+    private function batchJobsByMonth(ScAccount $account, Carbon $from, Carbon $to, PendingBatch &$batch): void
+    {
+        $now = now();
+
+        if ($from->greaterThanOrEqualTo($now)) {
+            return;
         }
 
-        return $this->batch->progress();
+        if ($to->greaterThanOrEqualTo($now)) {
+            $to = $now;
+        }
+
+        if ($from->equalTo($to)) {
+            return;
+        }
+
+        $batch->add(new UpdateDailyReportsJob(
+            account: $account,
+            startDate: $from,
+            endDate: $to
+        ));
+
+
+        $this->batchJobsByMonth(
+            account: $account,
+            from: $from->copy()->addMonth(),
+            to: $to->copy()->addMonth(),
+            batch: $batch,
+        );
     }
 
     protected function getFormSchema(): array
@@ -88,8 +105,8 @@ class MonthlyReportsBackfillForm extends Component implements HasForms
                 ->default(auth()->user()->scAccounts->first()?->getKey())
                 ->required(),
             DatePicker::make('from')
-                ->default(now()->subYear())
-                ->maxDate(now()->subYear())
+                ->maxDate(now()->subMonth())
+                ->default(now()->subMonth())
                 ->label('How far back to retrieve data?')
                 ->required(),
         ];

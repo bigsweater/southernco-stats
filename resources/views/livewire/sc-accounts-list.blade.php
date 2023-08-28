@@ -5,9 +5,9 @@
         </h2>
 
         <div>
-            <x-filament-support::button wire:click.prevent="updateAccounts">
+            <x-filament::button wire:click.prevent="updateAccounts">
                 Refresh
-            </x-filament-support::button>
+            </x-filament::button>
         </div>
     </div>
 

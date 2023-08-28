@@ -5,15 +5,13 @@ namespace App\Filament\Widgets;
 use App\CurrentUsageCacheKey;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
-use App\Models\ScDailyReport;
 use App\Models\ScHourlyReport;
 use App\Models\ScMonthlyReport;
 use App\ScClient;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Card;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 
 class CurrentStatsWidget extends BaseWidget
@@ -61,11 +59,11 @@ class CurrentStatsWidget extends BaseWidget
         );
     }
 
-    protected function getCards(): array
+    protected function getStats(): array
     {
         if (!$this->scCredentials) {
             return [
-                Card::make('Current usage statistics', 'Missing credentials')
+                Stat::make('Current usage statistics', 'Missing credentials')
                     ->color('warning')
                     ->description('Please sign into your Georgia Power account below in order to retreive your usage statistics.')
                     ->descriptionIcon('heroicon-o-exclamation-circle', 'before')
@@ -74,7 +72,7 @@ class CurrentStatsWidget extends BaseWidget
 
         if (!$this->scAccount) {
             return [
-                Card::make('Current usage statistics', 'Missing account')
+                Stat::make('Current usage statistics', 'Missing account')
                     ->color('warning')
                     ->description('No Georgia Power account found. Please check your credentials and try again.')
                     ->descriptionIcon('heroicon-o-exclamation-circle', 'before')
@@ -86,7 +84,7 @@ class CurrentStatsWidget extends BaseWidget
             || $this->report->period_end_at->isBefore(now())
         ) {
             return [
-                Card::make('Current usage statistics', 'Missing or outdated billing period')
+                Stat::make('Current usage statistics', 'Missing or outdated billing period')
                     ->color('warning')
                     ->description(new HtmlString('Your monthly reports are missing or outdated for this account. Visit the <a href="/monthly-reports">monthly reports page</a> to refresh them.'))
                     ->descriptionIcon('heroicon-o-exclamation-circle', 'before')
@@ -94,7 +92,7 @@ class CurrentStatsWidget extends BaseWidget
         }
 
         return [
-            Card::make(
+            Stat::make(
                 'Current usage',
                 $this->getCurrentUsageString()
             )->extraAttributes([
@@ -102,42 +100,42 @@ class CurrentStatsWidget extends BaseWidget
                 'wire:loading.class' => 'opacity-50',
             ])->description("Since {$this->report->period_start_at->diffForHumans()}"),
 
-            Card::make(
+            Stat::make(
                 'Current cost',
                 $this->getDollarsToDateString()
             )->extraAttributes([
                 'wire:loading.class' => 'opacity-50',
             ])->description("Since {$this->report->period_start_at->diffForHumans()}"),
 
-            Card::make(
+            Stat::make(
                 'Current highest demand',
                 $this->getCurrentDemandString()
             )->extraAttributes([
                 'wire:loading.class' => 'opacity-50',
             ])->description(new HtmlString("Highest one-hour usage since {$this->report->period_start_at->toFormattedDateString()}. <a href=\"https://www.georgiapower.com/content/dam/georgia-power/pdfs/residential-pdfs/tariffs/2023/TOU-RD-7.pdf\">More information</a>")),
 
-            Card::make(
+            Stat::make(
                 'Projected usage',
                 $this->getProjectedUsageString()
             )->extraAttributes([
                 'wire:loading.class' => 'opacity-50',
             ])->description("Between {$this->report->period_start_at->toFormattedDateString()} and {$this->report->period_end_at->toFormattedDateString()}"),
 
-            Card::make(
+            Stat::make(
                 'Projected cost',
                 $this->getProjectedCostString()
             )->extraAttributes([
                 'wire:loading.class' => 'opacity-50',
             ])->description("Between {$this->report->period_start_at->toFormattedDateString()} and {$this->report->period_end_at->toFormattedDateString()}"),
 
-            Card::make(
+            Stat::make(
                 'Average daily cost',
                 $this->getAverageDailyCostString()
             )->extraAttributes([
                 'wire:loading.class' => 'opacity-50',
             ]),
 
-            Card::make(
+            Stat::make(
                 'Average daily usage',
                 $this->getAverageDailyUsageString()
             )->extraAttributes([

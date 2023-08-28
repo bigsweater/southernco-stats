@@ -1,19 +1,22 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use App\ScClient;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Table;
 use Livewire\Component;
 
-class ScAccountsList extends Component implements HasTable
+class ScAccountsList extends Component implements HasTable, HasForms
 {
+    use InteractsWithForms;
     use InteractsWithTable;
 
     protected $listeners = [
@@ -50,21 +53,18 @@ class ScAccountsList extends Component implements HasTable
         }
     }
 
-    protected function getTableColumns(): array
+    protected function table(Table $table): Table
     {
-        return [
-            IconColumn::make('is_primary')
-                ->boolean()
-                ->trueIcon('heroicon-o-check-circle')
-                ->label('Primary')
-                ->trueColor('success'),
-            TextColumn::make('account_number')->label('Account Number'),
-            TextColumn::make('description')->label('Description'),
-        ];
-    }
-
-    protected function getTableQuery(): Builder
-    {
-        return auth()->user()->scAccounts()->getQuery();
+        return $table
+            ->query(auth()->user()->scAccounts()->getQuery())
+            ->columns([
+                IconColumn::make('is_primary')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->label('Primary')
+                    ->trueColor('success'),
+                TextColumn::make('account_number')->label('Account Number'),
+                TextColumn::make('description')->label('Description'),
+        ]);
     }
 }
