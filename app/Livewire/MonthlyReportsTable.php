@@ -12,7 +12,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +33,7 @@ class MonthlyReportsTable extends Component implements HasTable, HasForms
     {
         return boolval($this->batchId)
             && boolval($batch = Bus::findBatch($this->batchId))
-            && ! $batch->finished();
+            && !$batch->finished();
     }
 
     public function updateMonthlyReports()
@@ -48,52 +47,48 @@ class MonthlyReportsTable extends Component implements HasTable, HasForms
         $this->batchId = $batch->dispatch()->id;
     }
 
-    public function table(Table $table): Table
-    {
-        return $table->query($this->getTableQuery())
-            ->columns($this->getTableColumns())
-            ->filters($this->getTableFilters());
-    }
-
-    private function getTableColumns(): array
+    protected function getTableColumns(): array
     {
         return [
             TextColumn::make('account_number')->label('Account Number'),
             TextColumn::make('period_start_at')->label('Start')->date(),
             TextColumn::make('period_end_at')->label('End')->date(),
-            TextColumn::make('cost_usd')->label('Cost')->formatStateUsing(
-                fn (?string $state) => $state ? '$'.number_format($state, 2) : 'incomplete'
-            ),
-            TextColumn::make('usage_kwh')->label('Usage')->formatStateUsing(
-                fn (?string $state) => $state ? "{$state} kwh" : 'incomplete'
-            ),
+            TextColumn::make('cost_usd')
+                ->placeholder('In progress')
+                ->label('Cost')
+                ->money('usd'),
+            TextColumn::make('usage_kwh')
+                ->placeholder('In progress')
+                ->label('Usage')
+                ->formatStateUsing(
+                    fn (float $state): string => "{$state} kwh"
+                ),
             TextColumn::make('temp_high_f')->label('High °F'),
             TextColumn::make('temp_low_f')->label('Low °F'),
         ];
     }
 
-    private function getTableFilters(): array
+    protected function getTableFilters(): array
     {
         return [
             Filter::make('period')->form([
                 DatePicker::make('period_start'),
                 DatePicker::make('period_end'),
             ])
-            ->query(function (Builder $query, array $data): Builder {
-                return $query->when(
-                    $data['period_start'],
-                    fn (Builder $query, $date): Builder => $query->whereDate('period_start_at', '>=', $date)
-                )
-                ->when(
-                    $data['period_end'],
-                    fn (Builder $query, $date): Builder => $query->whereDate('period_end_at', '<=', $date)
-                );
-
-            })
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query->when(
+                        $data['period_start'],
+                        fn (Builder $query, $date): Builder => $query->whereDate('period_start_at', '>=', $date)
+                    )
+                        ->when(
+                            $data['period_end'],
+                            fn (Builder $query, $date): Builder => $query->whereDate('period_end_at', '<=', $date)
+                        );
+                })
         ];
     }
 
-    private function getTableQuery(): Builder
+    protected function getTableQuery(): Builder
     {
         return ScMonthlyReport::whereIn(
             'sc_account_id',

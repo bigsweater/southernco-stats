@@ -64,20 +64,16 @@ class DailyReportsTable extends Component implements HasForms, HasTable
             ->columns([
                 TextColumn::make('account_number')->label('Account Number'),
                 TextColumn::make('day_at')->label('Date')->date(),
-                TextColumn::make('weekday_cost_usd')->label('Weekday Cost')->formatStateUsing(
-                    fn (?string $state) => $state ? '$'.number_format($state, 2) : ''
-                ),
+                TextColumn::make('weekday_cost_usd')->label('Weekday Cost')->money('usd'),
                 TextColumn::make('weekday_usage_kwh')->label('Weekday Usage')->formatStateUsing(
-                    fn (?string $state) => $state ? "{$state} kwh" : ''
+                    fn (float $state) => "{$state} kwh"
                 ),
-                TextColumn::make('weekend_cost_usd')->label('Weekend Cost')->formatStateUsing(
-                    fn (?string $state) => $state ? '$'.number_format($state, 2) : ''
-                ),
+                TextColumn::make('weekend_cost_usd')->label('Weekend Cost')->money('usd'),
                 TextColumn::make('weekend_usage_kwh')->label('Weekend Usage')->formatStateUsing(
-                    fn (?string $state) => $state ? "{$state} kwh" : ''
+                    fn (float $state) => "{$state} kwh"
                 ),
                 TextColumn::make('overage')->label('Overage')->formatStateUsing(
-                    fn (?string $state) => $state ? "{$state} kwh" : ''
+                    fn (float $state) => "{$state} kwh"
                 ),
                 TextColumn::make('temp_high_f')->label('High °F'),
                 TextColumn::make('temp_low_f')->label('Low °F'),

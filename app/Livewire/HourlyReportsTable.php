@@ -54,11 +54,9 @@ class HourlyReportsTable extends Component implements HasTable, HasForms
         return [
             TextColumn::make('account_number')->label('Account Number'),
             TextColumn::make('hour_at')->label('Date')->dateTime('D M j, Y g:ia'),
-            TextColumn::make('cost_usd')->label('Cost')->formatStateUsing(
-                fn (?string $state) => $state ? '$'.number_format($state, 2) : ''
-            ),
+            TextColumn::make('cost_usd')->label('Cost')->money('usd'),
             TextColumn::make('usage_kwh')->label('Usage')->formatStateUsing(
-                fn (?string $state) => $state ? "{$state} kwh" : ''
+                fn (float $state) => "{$state} kwh"
             ),
             TextColumn::make('temp_f')->label('Temp °F'),
             IconColumn::make('is_peak')
