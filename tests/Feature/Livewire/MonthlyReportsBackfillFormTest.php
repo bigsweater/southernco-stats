@@ -7,8 +7,7 @@ use App\Models\ScCredentials;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Support\Facades\Bus;
 
-use function Pest\Laravel\actingAs;
-use function Pest\Laravel\freezeSecond;
+use function Pest\Laravel\{actingAs, freezeSecond};
 use function Pest\Livewire\livewire;
 
 beforeEach(function () {
@@ -26,7 +25,7 @@ test('it sets reasonable defaults', function () {
     $component = livewire(MonthlyReportsBackfillForm::class);
 
     expect($component->get('accountId'))->toBe($this->account->getKey());
-    expect($component->get('from'))->toBe(now()->subYear()->toDateTimeString());
+    expect($component->get('from'))->toBe(now()->subYear()->toDateString());
 });
 
 test('from must be present', function () {
@@ -64,8 +63,8 @@ test('it batches a job for one year of backfill', function () {
     Bus::assertBatched(function (PendingBatch $batch) {
         $job = $batch->jobs->first();
         return $job::class === UpdateMonthlyReportsJob::class
-            && $job->startDate->equalTo(now()->subYear())
-            && $job->endDate->equalTo(now());
+            && now()->subYear()->isSameDay($job->startDate)
+            && now()->isSameDay($job->endDate);
     });
 });
 
