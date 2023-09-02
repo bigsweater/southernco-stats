@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\MonthlyReportsTable;
+use App\Livewire\MonthlyReportsTable;
 use App\Jobs\UpdateMonthlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;

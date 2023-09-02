@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\HourlyReportsTable;
+use App\Livewire\HourlyReportsTable;
 use App\Jobs\UpdateHourlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;

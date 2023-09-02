@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\ScAccountsList;
+use App\Livewire\ScAccountsList;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
 use Illuminate\Support\Facades\Http;

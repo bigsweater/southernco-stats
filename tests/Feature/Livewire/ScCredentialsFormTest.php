@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\ScCredentialsForm;
+use App\Livewire\ScCredentialsForm;
 use App\Models\ScCredentials;
 use App\Models\User;
 use App\ScClient;
@@ -31,9 +31,7 @@ test('it saves new credentials', function () {
 
     actingAs($user);
 
-    $component = livewire(ScCredentialsForm::class, [
-        'credentials' => ScCredentials::make()
-    ]);
+    $component = livewire(ScCredentialsForm::class);
 
     $component->set('username', 'hello');
     $component->set('password', 'def456');
@@ -61,9 +59,7 @@ test('it updates existing credentials', function () {
 
     actingAs($user);
 
-    $component = livewire(ScCredentialsForm::class, [
-        'credentials' => $credentials,
-    ]);
+    $component = livewire(ScCredentialsForm::class);
 
     $component->set('username', 'hello');
     $component->set('password', 'def456');

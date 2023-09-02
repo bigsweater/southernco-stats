@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\HourlyReportsBackfillForm;
+use App\Livewire\HourlyReportsBackfillForm;
 use App\Jobs\UpdateHourlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;

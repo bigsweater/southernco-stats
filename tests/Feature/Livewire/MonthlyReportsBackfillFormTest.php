@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\MonthlyReportsBackfillForm;
+use App\Livewire\MonthlyReportsBackfillForm;
 use App\Jobs\UpdateMonthlyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
