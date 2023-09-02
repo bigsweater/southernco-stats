@@ -21,8 +21,7 @@ test('it stores values in correct position', function (array $response) {
     ]);
 
     (new UpdateDailyReportsJob($this->account))->handle();
-    $firstReport = ScDailyReport::find(1);
-    $secondReport = ScDailyReport::find(2);
+    [$firstReport, $secondReport] = ScDailyReport::all();
 
     expect($firstReport->scAccount->is($this->account))->toBeTrue();
     expect($secondReport->scAccount->is($this->account))->toBeTrue();

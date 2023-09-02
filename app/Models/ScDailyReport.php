@@ -14,6 +14,7 @@ class ScDailyReport extends Model
 
     protected $casts = [
         'day_at' => 'immutable_datetime',
+        'alert_cost' => 'float',
         'alert_kwh' => 'float',
         'average_daily_cost_usd' => 'float',
         'overage_low_kwh' => 'float',

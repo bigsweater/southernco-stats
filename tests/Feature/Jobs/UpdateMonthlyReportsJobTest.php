@@ -41,8 +41,7 @@ test('it stores values in correct position', function (array $response) {
     ]);
 
     (new UpdateMonthlyReportsJob($this->account))->handle();
-    $secondReport = ScMonthlyReport::find(2);
-    $thirdReport = ScMonthlyReport::find(3);
+    [$firstReport, $secondReport, $thirdReport] = ScMonthlyReport::all();
 
     expect($secondReport->scAccount->is($this->account))->toBeTrue();
     expect($secondReport->cost_usd)->toBeNull();

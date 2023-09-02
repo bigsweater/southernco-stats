@@ -26,7 +26,7 @@ test('it sets reasonable defaults', function () {
     $component = livewire(HourlyReportsBackfillForm::class);
 
     expect($component->get('accountId'))->toBe($this->account->getKey());
-    expect($component->get('from'))->toBe(now()->subDays(3)->toDateTimeString());
+    expect($component->get('from'))->toBe(now()->subDays(3)->toDateString());
 });
 
 test('from must be present', function () {
@@ -71,8 +71,8 @@ test('it batches a job for a day of backfill', function () {
     Bus::assertBatched(function (PendingBatch $batch) {
         $job = $batch->jobs->first();
         return $job::class === UpdateHourlyReportsJob::class
-            && $job->startDate->equalTo(now()->subDays(3))
-            && $job->endDate->equalTo(now()->subDays(2));
+            && $job->startDate->equalTo(now()->subDays(3)->toDateString())
+            && $job->endDate->equalTo(now()->subDays(2)->toDateString());
     });
 });
 

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Livewire\DailyReportsBackfillForm;
+use App\Livewire\DailyReportsBackfillForm;
 use App\Jobs\UpdateDailyReportsJob;
 use App\Models\ScAccount;
 use App\Models\ScCredentials;
@@ -26,7 +26,7 @@ test('it sets reasonable defaults', function () {
     $component = livewire(DailyReportsBackfillForm::class);
 
     expect($component->get('accountId'))->toBe($this->account->getKey());
-    expect($component->get('from'))->toBe(now()->subMonth()->toDateTimeString());
+    expect($component->get('from'))->toBe(now()->subMonth()->toDateString());
 });
 
 test('from must be present', function () {
@@ -71,8 +71,8 @@ test('it batches a job for one month of backfill', function () {
     Bus::assertBatched(function (PendingBatch $batch) {
         $job = $batch->jobs->first();
         return $job::class === UpdateDailyReportsJob::class
-            && $job->startDate->equalTo(now()->subMonth())
-            && $job->endDate->equalTo(now());
+            && $job->startDate->equalTo(now()->subMonth()->toDateString())
+            && $job->endDate->equalTo(now()->toDateString());
     });
 });
 
