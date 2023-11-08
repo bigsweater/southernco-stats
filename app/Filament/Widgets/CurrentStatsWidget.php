@@ -42,7 +42,8 @@ class CurrentStatsWidget extends BaseWidget
 
     public function getReportProperty(): ?ScMonthlyReport
     {
-        return ScMonthlyReport::whereBelongsTo($this->scAccount)
+        return ScMonthlyReport::query()
+            ->whereBelongsTo($this->scAccount)
             ->latest('period_start_at')
             ->firstOrNew();
     }
@@ -79,10 +80,7 @@ class CurrentStatsWidget extends BaseWidget
             ];
         }
 
-        if (
-            !$this->report->period_end_at
-            || $this->report->period_end_at->isBefore(now())
-        ) {
+        if (!$this->report->period_end_at) {
             return [
                 Stat::make('Current usage statistics', 'Missing or outdated billing period')
                     ->color('warning')
