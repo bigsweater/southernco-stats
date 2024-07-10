@@ -218,7 +218,7 @@ class ScClient
     private function getJwtRetrievalToken(string $tempToken): string
     {
         $token = $this->client::asForm()
-            ->post(static::SC_WEB_BASE_URL . '/Account/LoginComplete?ReturnUrl=null', ['ScWebToken' => (string) $tempToken])
+            ->post(static::SC_WEB_BASE_URL . '/Account/LoginComplete?returnUrl=/Login?mnuOpco=GPC', ['ScWebToken' => (string) $tempToken])
             ->throw()
             ->cookies()
             ->getCookieByName('SouthernJwtCookie')
