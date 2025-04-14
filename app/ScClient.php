@@ -32,10 +32,14 @@ class ScClient
 
     public function authenticatedClient(): PendingRequest
     {
+        $internalErrors = libxml_use_internal_errors(true);
+
         if ($this->credentials->updated_at->diffInHours(now()) > 2) {
             $this->credentials->jwt = $this->getJwt();
             $this->credentials->save();
         }
+
+        libxml_use_internal_errors($internalErrors);
 
         return $this->client::withToken($this->credentials->fresh()->jwt);
     }
