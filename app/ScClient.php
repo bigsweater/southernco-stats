@@ -13,6 +13,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Traits\ForwardsCalls;
 
@@ -23,11 +24,20 @@ class ScClient
     const AUTH_BASE_URL = 'https://webauth.southernco.com';
     const SC_WEB_BASE_URL = 'https://customerservice2.southerncompany.com';
     const SC_API_BASE_URL = 'https://customerservice2api.southerncompany.com';
+    const UA_STRINGS = [
+        'Mozilla/5.0 (platform; rv:gecko-version) Gecko/gecko-trail Firefox/firefox-version',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36 OPR/38.0.2220.41',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 13_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Mobile/15E148 Safari/604.1',
+    ];
 
     public function __construct(
         public ScCredentials $credentials,
         protected Http|Factory $client = new Http(),
     ) {
+        $uaString = array_rand(self::UA_STRINGS);
+        $this->client::withUserAgent($uaString);
     }
 
     public function authenticatedClient(): PendingRequest
