@@ -186,7 +186,7 @@ class ScClient
             true,
         );
 
-        throw_if(!$aft || !$params, new DOMException('Missing AFT token or params.'));
+        throw_if(!$aft || !$params, new DOMException('Missing AFT token or params.', $loginForm));
 
         return [$aft, $params];
     }
